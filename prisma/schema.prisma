@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model User {
+  id       Int    @id @default(autoincrement())
+  login    String @unique
+  password String
+  role     String // 'admin', 'trainer'
+
+  // Relations
+  groups         Group[]         @relation("DefaultTrainer")
+  scheduleEvents ScheduleEvent[] @relation("EventTrainer")
+}
+
+model Student {
+  id          Int     @id @default(autoincrement())
+  name        String
+  parentPhone String?
+  notes       String?
+
+  // Relations
+  groups     Group[]      @relation("StudentGroups")
+  attendance Attendance[]
+  payments   Payment[]
+}
+
+model Group {
+  id             Int    @id @default(autoincrement())
+  name           String
+  defaultTrainerId Int?
+  ratePerClass   Float  @default(0.0)
+
+  // Relations
+  defaultTrainer User?           @relation("DefaultTrainer", fields: [defaultTrainerId], references: [id])
+  students       Student[]       @relation("StudentGroups")
+  scheduleEvents ScheduleEvent[]
+}
+
+model ScheduleEvent {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  startTime String   // Format "HH:mm"
+  endTime   String   // Format "HH:mm"
+  room      String?  // Room/location (optional)
+  groupId   Int
+  trainerId Int
+
+  // Relations
+  group      Group        @relation(fields: [groupId], references: [id])
+  trainer    User         @relation("EventTrainer", fields: [trainerId], references: [id])
+  attendance Attendance[]
+}
+
+model Attendance {
+  id        Int    @id @default(autoincrement())
+  eventId   Int
+  studentId Int
+  status    String // 'present', 'absent'
+
+  // Relations
+  event   ScheduleEvent @relation(fields: [eventId], references: [id])
+  student Student       @relation(fields: [studentId], references: [id])
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  studentId   Int
+  amount      Float
+  monthYear   String   // e.g. "2023-11"
+  paymentDate DateTime @default(now())
+  method      String   // 'cash', 'transfer'
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id])
+}

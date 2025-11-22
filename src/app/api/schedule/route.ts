@@ -1,0 +1,74 @@
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+
+export async function GET(request: NextRequest) {
+    try {
+        const searchParams = request.nextUrl.searchParams;
+        const startDate = searchParams.get('startDate');
+        const endDate = searchParams.get('endDate');
+
+        // Build the where clause conditionally
+        const whereClause: any = {};
+
+        if (startDate && endDate) {
+            whereClause.date = {
+                gte: new Date(startDate),
+                lte: new Date(endDate),
+            };
+        } else if (startDate) {
+            whereClause.date = { gte: new Date(startDate) };
+        } else if (endDate) {
+            whereClause.date = { lte: new Date(endDate) };
+        }
+
+        const events = await prisma.scheduleEvent.findMany({
+            where: whereClause,
+            include: {
+                group: true,
+                trainer: true,
+            },
+            orderBy: [
+                { date: 'asc' },
+                { startTime: 'asc' },
+            ],
+        });
+
+        return NextResponse.json(events);
+    } catch (error) {
+        console.error('Error fetching schedule:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch schedule' },
+            { status: 500 }
+        );
+    }
+}
+
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json();
+        const { date, startTime, endTime, groupId, trainerId, room } = body;
+
+        const event = await prisma.scheduleEvent.create({
+            data: {
+                date: new Date(date),
+                startTime,
+                endTime,
+                groupId: parseInt(groupId),
+                trainerId: parseInt(trainerId),
+                room,
+            },
+            include: {
+                group: true,
+                trainer: true,
+            },
+        });
+
+        return NextResponse.json(event, { status: 201 });
+    } catch (error) {
+        console.error('Error creating schedule event:', error);
+        return NextResponse.json(
+            { error: 'Failed to create schedule event' },
+            { status: 500 }
+        );
+    }
+}
