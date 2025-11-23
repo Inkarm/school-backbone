@@ -9,7 +9,7 @@ const Sidebar = () => {
     const navItems = [
         { label: 'Pulpit', href: '/', icon: '⊞' }, // Using unicode for now, can be replaced with icons
         { label: 'Uczniowie', href: '/students', icon: '👥' },
-        { label: 'Kursy', href: '/courses', icon: '📖' }, // Added to match reference
+        { label: 'Grupy', href: '/groups', icon: '👥' }, // Renamed from Kursy to match schema
         { label: 'Sale', href: '/rooms', icon: '🏢' }, // Added to match reference
         { label: 'Trenerzy', href: '/trainers', icon: '👨‍🏫' }, // Added to match reference
         { label: 'Grafik', href: '/schedule', icon: '📅' },

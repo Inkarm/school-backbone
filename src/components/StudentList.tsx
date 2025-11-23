@@ -17,7 +17,11 @@ interface Student {
     }>;
 }
 
-export default function StudentList() {
+interface StudentListProps {
+    refreshTrigger?: number;
+}
+
+export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
@@ -25,7 +29,7 @@ export default function StudentList() {
 
     useEffect(() => {
         fetchStudents();
-    }, [searchTerm]);
+    }, [searchTerm, refreshTrigger]);
 
     const fetchStudents = async () => {
         try {

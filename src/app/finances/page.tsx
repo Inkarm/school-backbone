@@ -7,7 +7,7 @@ import Link from 'next/link';
 interface Payment {
     id: number;
     amount: number;
-    date: string;
+    paymentDate: string;
     method: string;
     student: {
         id: number;
@@ -48,7 +48,7 @@ export default function FinancesPage() {
     // Calculate summaries
     const currentMonth = new Date().toISOString().slice(0, 7);
     const monthlyRevenue = payments
-        .filter(p => p.date.startsWith(currentMonth))
+        .filter(p => p.paymentDate.startsWith(currentMonth))
         .reduce((sum, p) => sum + p.amount, 0);
 
     const recentPayments = payments.slice(0, 10);
@@ -121,7 +121,7 @@ export default function FinancesPage() {
                                 {recentPayments.map(payment => (
                                     <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
                                         <td className="p-4 font-mono text-sm text-slate-500">
-                                            {new Date(payment.date).toLocaleDateString('pl-PL')}
+                                            {new Date(payment.paymentDate).toLocaleDateString('pl-PL')}
                                         </td>
                                         <td className="p-4 font-medium text-slate-900">
                                             {payment.student.firstName} {payment.student.lastName}
