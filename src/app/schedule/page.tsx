@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 export default function SchedulePage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     return (
         <div className="space-y-6">
@@ -23,10 +24,14 @@ export default function SchedulePage() {
             </div>
 
             <div className="glass-panel p-6 min-h-[600px]">
-                <CalendarView />
+                <CalendarView refreshTrigger={refreshTrigger} />
             </div>
 
-            <AddClassModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <AddClassModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={() => setRefreshTrigger(prev => prev + 1)}
+            />
         </div>
     );
 }

@@ -22,14 +22,18 @@ interface ScheduleEvent {
     };
 }
 
-export default function CalendarView() {
+interface CalendarViewProps {
+    refreshTrigger?: number;
+}
+
+export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) {
     const [currentWeek, setCurrentWeek] = useState(new Date());
     const [events, setEvents] = useState<ScheduleEvent[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchEvents();
-    }, [currentWeek]);
+    }, [currentWeek, refreshTrigger]);
 
     const fetchEvents = async () => {
         try {
