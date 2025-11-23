@@ -12,10 +12,8 @@ interface Student {
     parentPhone: string;
     parentEmail: string;
     groups: Array<{
-        group: {
-            id: number;
-            name: string;
-        };
+        id: number;
+        name: string;
     }>;
     payments: Array<{
         id: number;
@@ -160,7 +158,7 @@ export default function StudentDetailsPage({ params }: { params: { id: string } 
                         {student.groups.length === 0 ? (
                             <p className="text-slate-500 col-span-3">Uczeń nie jest przypisany do żadnej grupy</p>
                         ) : (
-                            student.groups.map(({ group }) => (
+                            student.groups.map((group) => (
                                 <div key={group.id} className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 bg-slate-50">
                                     <span className="font-medium text-slate-700">{group.name}</span>
                                 </div>

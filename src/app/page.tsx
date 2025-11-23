@@ -1,4 +1,13 @@
+'use client';
+
+import { useState } from 'react';
+import AddStudentModal from '@/components/AddStudentModal';
+import AddPaymentModal from '@/components/AddPaymentModal';
+
 export default function Home() {
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
   return (
     <div className="space-y-8">
       <header>
@@ -35,14 +44,30 @@ export default function Home() {
       <div className="clean-card p-8">
         <h3 className="text-xl font-bold mb-6 tracking-tight text-slate-900">Szybkie akcje</h3>
         <div className="flex gap-4">
-          <button className="btn-primary flex items-center gap-2">
+          <button
+            onClick={() => setIsStudentModalOpen(true)}
+            className="btn-primary flex items-center gap-2"
+          >
             <span>+</span> Dodaj Ucznia
           </button>
-          <button className="btn-secondary">
+          <button
+            onClick={() => setIsPaymentModalOpen(true)}
+            className="btn-secondary"
+          >
             Nowa Wpłata
           </button>
         </div>
       </div>
+
+      <AddStudentModal
+        isOpen={isStudentModalOpen}
+        onClose={() => setIsStudentModalOpen(false)}
+      />
+
+      <AddPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+      />
     </div>
   );
 }

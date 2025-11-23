@@ -10,7 +10,7 @@ export async function GET() {
             select: {
                 id: true,
                 login: true,
-                // Add other fields if User model has name, etc. For now login is the name.
+                role: true,
             },
         });
 
