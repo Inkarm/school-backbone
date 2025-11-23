@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import AddGroupModal from '@/components/AddGroupModal';
 
 interface Group {
@@ -63,12 +64,18 @@ export default function GroupsPage() {
                                 {group.students.length} uczniów
                             </p>
                             <div className="flex gap-2">
-                                <button className="btn-secondary text-xs py-1 px-3">
+                                <button
+                                    className="btn-secondary text-xs py-1 px-3"
+                                    onClick={() => alert('Edycja grupy wkrótce')}
+                                >
                                     Edytuj
                                 </button>
-                                <button className="btn-secondary text-xs py-1 px-3">
+                                <Link
+                                    href={`/groups/${group.id}`}
+                                    className="btn-secondary text-xs py-1 px-3"
+                                >
                                     Szczegóły
-                                </button>
+                                </Link>
                             </div>
                         </div>
                     ))}
