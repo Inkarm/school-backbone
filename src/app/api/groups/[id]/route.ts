@@ -32,3 +32,28 @@ export async function GET(
         );
     }
 }
+
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params;
+        const groupId = parseInt(id);
+        const body = await request.json();
+        const { name } = body;
+
+        const group = await prisma.group.update({
+            where: { id: groupId },
+            data: { name },
+        });
+
+        return NextResponse.json(group);
+    } catch (error) {
+        console.error('Error updating group:', error);
+        return NextResponse.json(
+            { error: 'Failed to update group' },
+            { status: 500 }
+        );
+    }
+}

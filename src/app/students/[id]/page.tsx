@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 
 interface Student {
     id: number;
@@ -23,19 +23,20 @@ interface Student {
     }>;
 }
 
-export default function StudentDetailsPage({ params }: { params: { id: string } }) {
+export default function StudentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const [student, setStudent] = useState<Student | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
         fetchStudent();
-    }, [params.id]);
+    }, [id]);
 
     const fetchStudent = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/students/${params.id}`);
+            const response = await fetch(`/api/students/${id}`);
             if (!response.ok) throw new Error('Failed to fetch student');
 
             const data = await response.json();

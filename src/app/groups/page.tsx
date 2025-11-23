@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AddGroupModal from '@/components/AddGroupModal';
+import EditGroupModal from '@/components/EditGroupModal';
 
 interface Group {
     id: number;
@@ -15,6 +16,8 @@ export default function GroupsPage() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
 
     useEffect(() => {
         fetchGroups();
@@ -34,8 +37,14 @@ export default function GroupsPage() {
         }
     };
 
+    const handleEdit = (group: Group) => {
+        setSelectedGroup(group);
+        setIsEditModalOpen(true);
+    };
+
     return (
         <div className="space-y-6">
+            {/* ... (header unchanged) */}
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-3xl font-bold">Grupy</h2>
@@ -66,7 +75,7 @@ export default function GroupsPage() {
                             <div className="flex gap-2">
                                 <button
                                     className="btn-secondary text-xs py-1 px-3"
-                                    onClick={() => alert('Edycja grupy wkrótce')}
+                                    onClick={() => handleEdit(group)}
                                 >
                                     Edytuj
                                 </button>
@@ -86,6 +95,13 @@ export default function GroupsPage() {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={() => setRefreshTrigger(prev => prev + 1)}
+            />
+
+            <EditGroupModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSuccess={() => setRefreshTrigger(prev => prev + 1)}
+                group={selectedGroup}
             />
         </div>
     );

@@ -1,30 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 
 interface Group {
     id: number;
     name: string;
     students: Array<{
-        student: {
-            id: number;
-            firstName: string;
-            lastName: string;
-        }
+        id: number;
+        firstName: string;
+        lastName: string;
     }>;
 }
 
-export default function GroupDetailsPage({ params }: { params: { id: string } }) {
+export default function GroupDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const [group, setGroup] = useState<Group | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchGroup();
-    }, [params.id]);
+    }, [id]);
 
     const fetchGroup = async () => {
         try {
-            const res = await fetch(`/api/groups/${params.id}`);
+            const res = await fetch(`/api/groups/${id}`);
             if (res.ok) setGroup(await res.json());
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
@@ -42,7 +41,7 @@ export default function GroupDetailsPage({ params }: { params: { id: string } })
                     <p className="text-slate-500">Brak uczniów w tej grupie.</p>
                 ) : (
                     <ul className="space-y-2">
-                        {group.students.map(({ student }) => (
+                        {group.students.map((student) => (
                             <li key={student.id} className="p-3 bg-slate-50 rounded-lg border border-gray-200 text-slate-700">
                                 {student.firstName} {student.lastName}
                             </li>
