@@ -17,11 +17,7 @@ export async function GET(request: NextRequest) {
                 }
                 : undefined,
             include: {
-                groups: {
-                    include: {
-                        group: true,
-                    },
-                },
+                groups: true,
             },
             orderBy: {
                 lastName: 'asc',

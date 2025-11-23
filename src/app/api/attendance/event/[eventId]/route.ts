@@ -15,11 +15,7 @@ export async function GET(
             include: {
                 group: {
                     include: {
-                        students: {
-                            include: {
-                                student: true,
-                            },
-                        },
+                        students: true,
                     },
                 },
                 attendance: true,

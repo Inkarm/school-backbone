@@ -12,14 +12,10 @@ export async function GET(
         const student = await prisma.student.findUnique({
             where: { id: studentId },
             include: {
-                groups: {
-                    include: {
-                        group: true,
-                    },
-                },
+                groups: true,
                 payments: {
                     orderBy: {
-                        date: 'desc',
+                        paymentDate: 'desc',
                     },
                     take: 10,
                 },

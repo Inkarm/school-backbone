@@ -20,7 +20,7 @@ interface Student {
     payments: Array<{
         id: number;
         amount: number;
-        date: string;
+        paymentDate: string;
         method: string;
     }>;
 }
@@ -73,7 +73,7 @@ export default function StudentDetailsPage({ params }: { params: { id: string } 
     // Check payment status (paid in current month)
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
     const lastPayment = student.payments[0];
-    const isPaid = lastPayment && new Date(lastPayment.date).toISOString().slice(0, 7) === currentMonth;
+    const isPaid = lastPayment && new Date(lastPayment.paymentDate).toISOString().slice(0, 7) === currentMonth;
 
     return (
         <div className="space-y-8">
@@ -142,7 +142,7 @@ export default function StudentDetailsPage({ params }: { params: { id: string } 
                             <div className="p-4 rounded-lg bg-slate-50 border border-gray-200">
                                 <span className="text-xs text-slate-500 block mb-1">Ostatnia wpłata</span>
                                 <span className="font-mono text-slate-900">
-                                    {new Date(lastPayment.date).toLocaleDateString('pl-PL')}
+                                    {new Date(lastPayment.paymentDate).toLocaleDateString('pl-PL')}
                                 </span>
                             </div>
                             <div className="p-4 rounded-lg bg-slate-50 border border-gray-200">

@@ -12,15 +12,15 @@ export async function GET(request: NextRequest) {
             where: {
                 AND: [
                     studentId ? { studentId: parseInt(studentId) } : {},
-                    startDate ? { date: { gte: new Date(startDate) } } : {},
-                    endDate ? { date: { lte: new Date(endDate) } } : {},
+                    startDate ? { paymentDate: { gte: new Date(startDate) } } : {},
+                    endDate ? { paymentDate: { lte: new Date(endDate) } } : {},
                 ],
             },
             include: {
                 student: true,
             },
             orderBy: {
-                date: 'desc',
+                paymentDate: 'desc',
             },
         });
 
@@ -37,16 +37,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { studentId, amount, date, method, month, notes } = body;
+        const { studentId, amount, paymentDate, method, monthYear } = body;
 
         const payment = await prisma.payment.create({
             data: {
                 studentId: parseInt(studentId),
                 amount: parseFloat(amount),
-                date: new Date(date),
+                paymentDate: new Date(paymentDate),
                 method,
-                month,
-                notes,
+                monthYear,
             },
             include: {
                 student: true,

@@ -20,10 +20,9 @@ export default function AddPaymentModal({ isOpen, onClose, onSuccess }: AddPayme
     const [formData, setFormData] = useState({
         studentId: '',
         amount: '',
-        date: new Date().toISOString().split('T')[0],
+        paymentDate: new Date().toISOString().split('T')[0],
         method: 'Gotówka',
-        month: new Date().toISOString().slice(0, 7),
-        notes: '',
+        monthYear: new Date().toISOString().slice(0, 7),
     });
 
     useEffect(() => {
@@ -60,10 +59,9 @@ export default function AddPaymentModal({ isOpen, onClose, onSuccess }: AddPayme
             setFormData({
                 studentId: '',
                 amount: '',
-                date: new Date().toISOString().split('T')[0],
+                paymentDate: new Date().toISOString().split('T')[0],
                 method: 'Gotówka',
-                month: new Date().toISOString().slice(0, 7),
-                notes: '',
+                monthYear: new Date().toISOString().slice(0, 7),
             });
 
             onSuccess?.();
@@ -115,8 +113,8 @@ export default function AddPaymentModal({ isOpen, onClose, onSuccess }: AddPayme
                         <label className="block text-sm font-medium text-slate-700 mb-2">Data</label>
                         <input
                             type="date"
-                            value={formData.date}
-                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                            value={formData.paymentDate}
+                            onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
                             className="w-full p-2 border border-gray-200 rounded-lg text-slate-900"
                             required
                         />
@@ -139,21 +137,13 @@ export default function AddPaymentModal({ isOpen, onClose, onSuccess }: AddPayme
                         <label className="block text-sm font-medium text-slate-700 mb-2">Miesiąc</label>
                         <input
                             type="month"
-                            value={formData.month}
-                            onChange={(e) => setFormData({ ...formData, month: e.target.value })}
+                            value={formData.monthYear}
+                            onChange={(e) => setFormData({ ...formData, monthYear: e.target.value })}
                             className="w-full p-2 border border-gray-200 rounded-lg text-slate-900"
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Notatki (opcjonalne)</label>
-                        <textarea
-                            value={formData.notes}
-                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                            className="w-full p-2 border border-gray-200 rounded-lg text-slate-900"
-                            rows={3}
-                        />
-                    </div>
+
 
                     <div className="flex gap-3 pt-4">
                         <button type="button" onClick={onClose} className="btn-secondary flex-1" disabled={loading}>

@@ -1,0 +1,10 @@
+src/app/api/students/[id]/route.ts(18,25): error TS2353: Object literal may only specify known properties, and 'date' does not exist in type 'PaymentOrderByWithRelationInput | PaymentOrderByWithRelationInput[]'.
+src/app/api/students/[id]/route.ts(55,17): error TS2353: Object literal may only specify known properties, and 'firstName' does not exist in type '(Without<StudentUpdateInput, StudentUncheckedUpdateInput> & StudentUncheckedUpdateInput) | (Without<...> & StudentUpdateInput)'.
+src/app/api/students/route.ts(13,27): error TS2322: Type '{ OR: ({ firstName: { contains: string; mode: string; }; } | { lastName: { contains: string; mode: string; }; } | { parentName: { contains: string; mode: string; }; })[]; } | undefined' is not assignable to type 'StudentWhereInput | undefined'.
+  Type '{ OR: ({ firstName: { contains: string; mode: string; }; } | { lastName: { contains: string; mode: string; }; } | { parentName: { contains: string; mode: string; }; })[]; }' is not assignable to type 'StudentWhereInput'.
+    Types of property 'OR' are incompatible.
+      Type '({ firstName: { contains: string; mode: string; }; } | { lastName: { contains: string; mode: string; }; } | { parentName: { contains: string; mode: string; }; })[]' is not assignable to type 'StudentWhereInput[]'.
+        Type '{ firstName: { contains: string; mode: string; }; } | { lastName: { contains: string; mode: string; }; } | { parentName: { contains: string; mode: string; }; }' is not assignable to type 'StudentWhereInput'.
+          Object literal may only specify known properties, and 'firstName' does not exist in type 'StudentWhereInput'.
+src/app/api/students/route.ts(23,17): error TS2353: Object literal may only specify known properties, and 'lastName' does not exist in type 'StudentOrderByWithRelationInput | StudentOrderByWithRelationInput[]'.
+src/app/api/students/route.ts(44,17): error TS2353: Object literal may only specify known properties, and 'firstName' does not exist in type '(Without<StudentCreateInput, StudentUncheckedCreateInput> & StudentUncheckedCreateInput) | (Without<...> & StudentCreateInput)'.

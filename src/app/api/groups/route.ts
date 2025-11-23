@@ -5,11 +5,7 @@ export async function GET() {
     try {
         const groups = await prisma.group.findMany({
             include: {
-                students: {
-                    include: {
-                        student: true,
-                    },
-                },
+                students: true,
             },
             orderBy: {
                 name: 'asc',
@@ -29,12 +25,11 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { name, description } = body;
+        const { name } = body;
 
         const group = await prisma.group.create({
             data: {
                 name,
-                description,
             },
         });
 
