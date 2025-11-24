@@ -39,6 +39,13 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { studentId, amount, paymentDate, method, monthYear } = body;
 
+        if (!studentId || !amount || !paymentDate) {
+            return NextResponse.json(
+                { error: 'Missing required fields: studentId, amount, or paymentDate' },
+                { status: 400 }
+            );
+        }
+
         const payment = await prisma.payment.create({
             data: {
                 studentId: parseInt(studentId),
@@ -53,10 +60,10 @@ export async function POST(request: NextRequest) {
         });
 
         return NextResponse.json(payment, { status: 201 });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating payment:', error);
         return NextResponse.json(
-            { error: 'Failed to create payment' },
+            { error: error.message || 'Failed to create payment' },
             { status: 500 }
         );
     }

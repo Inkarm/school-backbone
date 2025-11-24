@@ -59,14 +59,22 @@ model ScheduleEvent {
   date      DateTime
   startTime String   // Format "HH:mm"
   endTime   String   // Format "HH:mm"
-  room      String?  // Room/location (optional)
+  roomId    Int?
   groupId   Int
   trainerId Int
 
   // Relations
   group      Group        @relation(fields: [groupId], references: [id])
   trainer    User         @relation("EventTrainer", fields: [trainerId], references: [id])
+  room       Room?        @relation(fields: [roomId], references: [id])
   attendance Attendance[]
+}
+
+model Room {
+  id       Int             @id @default(autoincrement())
+  name     String
+  capacity Int
+  events   ScheduleEvent[]
 }
 
 model Attendance {

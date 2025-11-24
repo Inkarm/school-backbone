@@ -21,6 +21,7 @@ interface Trainer {
 export default function AddClassModal({ isOpen, onClose, onSuccess }: AddClassModalProps) {
     const [groups, setGroups] = useState<Group[]>([]);
     const [trainers, setTrainers] = useState<Trainer[]>([]);
+    const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -29,13 +30,14 @@ export default function AddClassModal({ isOpen, onClose, onSuccess }: AddClassMo
         startTime: '17:00',
         endTime: '18:00',
         trainerId: '',
-        room: 'Sala 1',
+        roomId: '',
     });
 
     useEffect(() => {
         if (isOpen) {
             fetchGroups();
             fetchTrainers();
+            fetchRooms();
         }
     }, [isOpen]);
 
@@ -50,6 +52,13 @@ export default function AddClassModal({ isOpen, onClose, onSuccess }: AddClassMo
         try {
             const res = await fetch('/api/trainers');
             if (res.ok) setTrainers(await res.json());
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchRooms = async () => {
+        try {
+            const res = await fetch('/api/rooms');
+            if (res.ok) setRooms(await res.json());
         } catch (e) { console.error(e); }
     };
 
@@ -158,13 +167,14 @@ export default function AddClassModal({ isOpen, onClose, onSuccess }: AddClassMo
                     <div>
                         <label className="block text-sm font-medium mb-1 text-[hsl(var(--text-muted))]">Sala</label>
                         <select
-                            value={formData.room}
-                            onChange={e => setFormData({ ...formData, room: e.target.value })}
+                            value={formData.roomId}
+                            onChange={e => setFormData({ ...formData, roomId: e.target.value })}
                             className="w-full bg-[hsl(var(--bg-dark))] border border-[hsl(var(--glass-border))] rounded-lg p-3 text-white focus:outline-none focus:border-[hsl(var(--primary))]"
                         >
-                            <option>Sala 1</option>
-                            <option>Sala 2</option>
-                            <option>Sala 3</option>
+                            <option value="">Wybierz salę (opcjonalnie)...</option>
+                            {rooms.map(r => (
+                                <option key={r.id} value={r.id}>{r.name}</option>
+                            ))}
                         </select>
                     </div>
 

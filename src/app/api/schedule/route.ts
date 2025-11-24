@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
             include: {
                 group: true,
                 trainer: true,
+                room: true,
             },
             orderBy: [
                 { date: 'asc' },
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { date, startTime, endTime, groupId, trainerId, room } = body;
+        const { date, startTime, endTime, groupId, trainerId, roomId } = body;
 
         const event = await prisma.scheduleEvent.create({
             data: {
@@ -55,11 +56,12 @@ export async function POST(request: NextRequest) {
                 endTime,
                 groupId: parseInt(groupId),
                 trainerId: parseInt(trainerId),
-                room,
+                roomId: roomId ? parseInt(roomId) : null,
             },
             include: {
                 group: true,
                 trainer: true,
+                room: true,
             },
         });
 

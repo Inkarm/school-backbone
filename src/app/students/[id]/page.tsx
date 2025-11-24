@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
+import EditStudentModal from '@/components/EditStudentModal';
+import AssignGroupModal from '@/components/AssignGroupModal';
 
 interface Student {
     id: number;
@@ -28,6 +30,8 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ id: s
     const [student, setStudent] = useState<Student | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isAssignGroupModalOpen, setIsAssignGroupModalOpen] = useState(false);
 
     useEffect(() => {
         fetchStudent();
@@ -84,7 +88,10 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ id: s
                     <p className="text-slate-500">Karta ucznia</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="btn-secondary">
+                    <button
+                        className="btn-secondary"
+                        onClick={() => setIsEditModalOpen(true)}
+                    >
                         Edytuj
                     </button>
                     <button className="btn-primary">
@@ -154,7 +161,15 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ id: s
 
                 {/* Groups Assignment */}
                 <div className="clean-card p-6 space-y-6 md:col-span-2">
-                    <h3 className="text-lg font-semibold border-b border-gray-100 pb-4 text-slate-900">Przypisane Grupy</h3>
+                    <div className="flex justify-between items-center border-b border-gray-100 pb-4">
+                        <h3 className="text-lg font-semibold text-slate-900">Przypisane Grupy</h3>
+                        <button
+                            className="btn-secondary text-xs"
+                            onClick={() => setIsAssignGroupModalOpen(true)}
+                        >
+                            + Przypisz do grupy
+                        </button>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {student.groups.length === 0 ? (
                             <p className="text-slate-500 col-span-3">Uczeń nie jest przypisany do żadnej grupy</p>
@@ -168,6 +183,27 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ id: s
                     </div>
                 </div>
             </div>
+
+            <EditStudentModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSuccess={() => {
+                    fetchStudent();
+                    setIsEditModalOpen(false);
+                }}
+                student={student}
+            />
+
+            <AssignGroupModal
+                isOpen={isAssignGroupModalOpen}
+                onClose={() => setIsAssignGroupModalOpen(false)}
+                onSuccess={() => {
+                    fetchStudent();
+                    setIsAssignGroupModalOpen(false);
+                }}
+                studentId={student.id}
+                currentGroupIds={student.groups.map(g => g.id)}
+            />
         </div>
     );
 }

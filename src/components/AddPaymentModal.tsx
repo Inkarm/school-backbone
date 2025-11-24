@@ -53,7 +53,10 @@ export default function AddPaymentModal({ isOpen, onClose, onSuccess }: AddPayme
                 body: JSON.stringify(formData),
             });
 
-            if (!response.ok) throw new Error('Failed to create payment');
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to create payment');
+            }
 
             // Reset form
             setFormData({
@@ -65,9 +68,9 @@ export default function AddPaymentModal({ isOpen, onClose, onSuccess }: AddPayme
             });
 
             onSuccess?.();
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error creating payment:', err);
-            alert('Nie udało się dodać wpłaty');
+            alert(`Nie udało się dodać wpłaty: ${err.message}`);
         } finally {
             setLoading(false);
         }
