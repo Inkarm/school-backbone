@@ -10,15 +10,17 @@ interface ScheduleEvent {
     date: string;
     startTime: string;
     endTime: string;
-    room: string;
+    room: {
+        id: number;
+        name: string;
+    } | null;
     group: {
         id: number;
         name: string;
     };
     trainer: {
         id: number;
-        firstName: string;
-        lastName: string;
+        login: string;
     };
 }
 
