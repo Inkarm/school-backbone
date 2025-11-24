@@ -109,7 +109,7 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
                                     <td className="p-4 font-mono text-sm text-slate-500">{student.parentPhone}</td>
                                     <td className="p-4">
                                         <div className="flex gap-2 flex-wrap">
-                                            {student.groups.map(({ group }) => (
+                                            {student.groups.map((group) => (
                                                 <span key={group.id} className="px-2 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium">
                                                     {group.name}
                                                 </span>
