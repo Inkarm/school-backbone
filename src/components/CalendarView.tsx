@@ -170,8 +170,8 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
                                         }}
                                     >
                                         <div className="font-bold">{event.group.name}</div>
-                                        <div className="opacity-80">{event.trainer.firstName} {event.trainer.lastName}</div>
-                                        <div className="text-[10px] opacity-60">{event.room}</div>
+                                        <div className="opacity-80">{event.trainer.login}</div>
+                                        {event.room && <div className="text-[10px] opacity-60">{event.room.name}</div>}
                                     </div>
                                 );
                             })}
