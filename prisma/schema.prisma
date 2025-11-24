@@ -17,6 +17,14 @@ model User {
   password String
   role     String // 'admin', 'trainer'
 
+  // Profile Data
+  firstName String?
+  lastName  String?
+  email     String?
+  phone     String?
+  bio       String?
+  color     String? // Hex color for calendar
+
   // Relations
   groups         Group[]         @relation("DefaultTrainer")
   scheduleEvents ScheduleEvent[] @relation("EventTrainer")
@@ -62,6 +70,10 @@ model ScheduleEvent {
   roomId    Int?
   groupId   Int
   trainerId Int
+  
+  // New fields
+  status      String   @default("SCHEDULED") // 'SCHEDULED', 'CANCELLED', 'COMPLETED'
+  description String?
 
   // Relations
   group      Group        @relation(fields: [groupId], references: [id])

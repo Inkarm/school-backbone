@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import EventDetailsModal from '@/components/EventDetailsModal';
 
 const DAYS = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 8); // 8:00 - 21:00
@@ -10,6 +11,8 @@ interface ScheduleEvent {
     date: string;
     startTime: string;
     endTime: string;
+    status: string;
+    description: string | null;
     room: {
         id: number;
         name: string;
@@ -21,6 +24,8 @@ interface ScheduleEvent {
     trainer: {
         id: number;
         login: string;
+        firstName: string | null;
+        lastName: string | null;
     };
 }
 
@@ -32,6 +37,7 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
     const [currentWeek, setCurrentWeek] = useState(new Date());
     const [events, setEvents] = useState<ScheduleEvent[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
 
     useEffect(() => {
         fetchEvents();
@@ -84,14 +90,23 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
         };
     };
 
-    const getEventColor = (groupId: number) => {
+    const getEventColor = (event: ScheduleEvent) => {
+        if (event.status === 'CANCELLED') {
+            return 'bg-gray-100 border-gray-300 text-gray-500 line-through opacity-70';
+        }
+        if (event.status === 'COMPLETED') {
+            return 'bg-emerald-50 border-emerald-200 text-emerald-700';
+        }
+
         const colors = [
             'bg-indigo-50 border-indigo-200 text-indigo-700',
-            'bg-emerald-50 border-emerald-200 text-emerald-700',
+            'bg-blue-50 border-blue-200 text-blue-700',
             'bg-amber-50 border-amber-200 text-amber-700',
             'bg-rose-50 border-rose-200 text-rose-700',
+            'bg-purple-50 border-purple-200 text-purple-700',
+            'bg-teal-50 border-teal-200 text-teal-700',
         ];
-        return colors[groupId % colors.length];
+        return colors[event.group.id % colors.length];
     };
 
     if (loading) {
@@ -165,21 +180,34 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
                                 return (
                                     <div
                                         key={event.id}
-                                        className={`absolute w-[90%] left-[5%] rounded-md p-2 text-xs font-medium cursor-pointer hover:shadow-md transition-all border ${getEventColor(event.group.id)}`}
+                                        onClick={() => setSelectedEvent(event)}
+                                        className={`absolute w-[90%] left-[5%] rounded-md p-2 text-xs font-medium cursor-pointer hover:shadow-md transition-all border ${getEventColor(event)}`}
                                         style={{
                                             top: pos.top,
                                             height: pos.height,
                                         }}
                                     >
-                                        <div className="font-bold">{event.group.name}</div>
-                                        <div className="opacity-80">{event.trainer.login}</div>
-                                        {event.room && <div className="text-[10px] opacity-60">{event.room.name}</div>}
+                                        <div className="font-bold truncate">{event.group.name}</div>
+                                        <div className="opacity-80 truncate">
+                                            {event.trainer.firstName ? `${event.trainer.firstName} ${event.trainer.lastName}` : event.trainer.login}
+                                        </div>
+                                        {event.room && <div className="text-[10px] opacity-60 truncate">{event.room.name}</div>}
+                                        {event.status === 'CANCELLED' && (
+                                            <div className="text-[10px] font-bold text-red-500 mt-1">ODWOŁANE</div>
+                                        )}
                                     </div>
                                 );
                             })}
                     </div>
                 ))}
             </div>
+
+            <EventDetailsModal
+                isOpen={!!selectedEvent}
+                onClose={() => setSelectedEvent(null)}
+                onSuccess={fetchEvents}
+                event={selectedEvent}
+            />
         </div>
     );
 }

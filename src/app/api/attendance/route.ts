@@ -6,26 +6,38 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { eventId, attendance } = body;
 
-        // Delete existing attendance for this event
-        await prisma.attendance.deleteMany({
-            where: { eventId: parseInt(eventId) },
-        });
+        // attendance is an array of { studentId: number, status: string }
 
-        // Create new attendance records
-        const attendanceRecords = await prisma.attendance.createMany({
-            data: attendance.map((record: { studentId: number; status: string }) => ({
-                eventId: parseInt(eventId),
-                studentId: record.studentId,
-                status: record.status,
-                date: new Date(),
-            })),
-        });
+        if (!eventId || !Array.isArray(attendance)) {
+            return NextResponse.json(
+                { error: 'Invalid input data' },
+                { status: 400 }
+            );
+        }
 
-        return NextResponse.json({ success: true, count: attendanceRecords.count });
+        // Strategy: Delete all existing attendance for this event and re-create.
+        // This handles updates and new records in one go, assuming the frontend sends the full state.
+        // This avoids the need for a unique constraint on [eventId, studentId] for upsert,
+        // although adding that constraint would be better practice in the long run.
+
+        await prisma.$transaction([
+            prisma.attendance.deleteMany({
+                where: { eventId: parseInt(eventId) },
+            }),
+            prisma.attendance.createMany({
+                data: attendance.map((r: any) => ({
+                    eventId: parseInt(eventId),
+                    studentId: r.studentId,
+                    status: r.status,
+                })),
+            }),
+        ]);
+
+        return NextResponse.json({ message: 'Attendance saved successfully' });
     } catch (error) {
-        console.error('Error marking attendance:', error);
+        console.error('Error saving attendance:', error);
         return NextResponse.json(
-            { error: 'Failed to mark attendance' },
+            { error: 'Failed to save attendance' },
             { status: 500 }
         );
     }
