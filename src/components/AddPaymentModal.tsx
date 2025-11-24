@@ -6,6 +6,7 @@ interface AddPaymentModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess?: () => void;
+    studentId?: number; // Optional preselected student
 }
 
 interface Student {
@@ -14,7 +15,7 @@ interface Student {
     lastName: string;
 }
 
-export default function AddPaymentModal({ isOpen, onClose, onSuccess }: AddPaymentModalProps) {
+export default function AddPaymentModal({ isOpen, onClose, onSuccess, studentId }: AddPaymentModalProps) {
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -28,8 +29,11 @@ export default function AddPaymentModal({ isOpen, onClose, onSuccess }: AddPayme
     useEffect(() => {
         if (isOpen) {
             fetchStudents();
+            if (studentId) {
+                setFormData(prev => ({ ...prev, studentId: studentId.toString() }));
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, studentId]);
 
     const fetchStudents = async () => {
         try {
@@ -68,6 +72,7 @@ export default function AddPaymentModal({ isOpen, onClose, onSuccess }: AddPayme
             });
 
             onSuccess?.();
+            onClose(); // Close modal on success
         } catch (err: any) {
             console.error('Error creating payment:', err);
             alert(`Nie udało się dodać wpłaty: ${err.message}`);
@@ -91,6 +96,7 @@ export default function AddPaymentModal({ isOpen, onClose, onSuccess }: AddPayme
                             onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
                             className="w-full p-2 border border-gray-200 rounded-lg text-slate-900"
                             required
+                            disabled={!!studentId} // Disable if preselected
                         >
                             <option value="">Wybierz ucznia...</option>
                             {students.map(student => (
@@ -145,8 +151,6 @@ export default function AddPaymentModal({ isOpen, onClose, onSuccess }: AddPayme
                             className="w-full p-2 border border-gray-200 rounded-lg text-slate-900"
                         />
                     </div>
-
-
 
                     <div className="flex gap-3 pt-4">
                         <button type="button" onClick={onClose} className="btn-secondary flex-1" disabled={loading}>

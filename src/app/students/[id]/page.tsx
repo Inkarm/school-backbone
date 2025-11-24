@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import EditStudentModal from '@/components/EditStudentModal';
 import AssignGroupModal from '@/components/AssignGroupModal';
+import AddPaymentModal from '@/components/AddPaymentModal';
 
 interface Student {
     id: number;
@@ -32,6 +33,7 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ id: s
     const [error, setError] = useState('');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAssignGroupModalOpen, setIsAssignGroupModalOpen] = useState(false);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
     useEffect(() => {
         fetchStudent();
@@ -94,7 +96,10 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ id: s
                     >
                         Edytuj
                     </button>
-                    <button className="btn-primary">
+                    <button
+                        className="btn-primary"
+                        onClick={() => setIsPaymentModalOpen(true)}
+                    >
                         Dodaj Wpłatę
                     </button>
                 </div>
@@ -203,6 +208,16 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ id: s
                 }}
                 studentId={student.id}
                 currentGroupIds={student.groups.map(g => g.id)}
+            />
+
+            <AddPaymentModal
+                isOpen={isPaymentModalOpen}
+                onClose={() => setIsPaymentModalOpen(false)}
+                onSuccess={() => {
+                    fetchStudent();
+                    setIsPaymentModalOpen(false);
+                }}
+                studentId={student.id}
             />
         </div>
     );

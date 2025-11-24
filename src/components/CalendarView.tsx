@@ -69,7 +69,9 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
         const d = new Date(date);
         const day = d.getDay();
         const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-        return new Date(d.setDate(diff));
+        d.setDate(diff);
+        d.setHours(0, 0, 0, 0); // Reset time to start of day
+        return d;
     };
 
     const getEventPosition = (event: ScheduleEvent) => {
