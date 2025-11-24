@@ -74,10 +74,54 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
         return d;
     };
 
-    const getEventPosition = (event: ScheduleEvent) => {
-        const eventDate = new Date(event.date);
-        const dayIndex = (eventDate.getDay() + 6) % 7; // Convert to Monday=0
+    // Helper to calculate layout for overlapping events
+    const calculateEventLayout = (dayEvents: ScheduleEvent[]) => {
+        // Sort by start time
+        const sorted = [...dayEvents].sort((a, b) => {
+            const startA = a.startTime.split(':').map(Number);
+            const startB = b.startTime.split(':').map(Number);
+            return (startA[0] * 60 + startA[1]) - (startB[0] * 60 + startB[1]);
+        });
 
+        const columns: ScheduleEvent[][] = [];
+
+        sorted.forEach(event => {
+            let placed = false;
+            for (let i = 0; i < columns.length; i++) {
+                const lastInCol = columns[i][columns[i].length - 1];
+                // Check if overlaps
+                const [lastEndH, lastEndM] = lastInCol.endTime.split(':').map(Number);
+                const [currStartH, currStartM] = event.startTime.split(':').map(Number);
+
+                const lastEnd = lastEndH * 60 + lastEndM;
+                const currStart = currStartH * 60 + currStartM;
+
+                if (currStart >= lastEnd) {
+                    columns[i].push(event);
+                    placed = true;
+                    break;
+                }
+            }
+            if (!placed) {
+                columns.push([event]);
+            }
+        });
+
+        // Map event ID to layout props
+        const layoutMap = new Map();
+        columns.forEach((col, colIndex) => {
+            col.forEach(event => {
+                layoutMap.set(event.id, {
+                    width: `${90 / columns.length}%`,
+                    left: `${5 + (colIndex * (90 / columns.length))}%`
+                });
+            });
+        });
+
+        return layoutMap;
+    };
+
+    const getEventPosition = (event: ScheduleEvent, layout: { width: string, left: string }) => {
         const [startHour, startMinute] = event.startTime.split(':').map(Number);
         const [endHour, endMinute] = event.endTime.split(':').map(Number);
 
@@ -86,9 +130,10 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
         const duration = endInHours - startInHours;
 
         return {
-            dayIndex,
             top: `${(startInHours - 8) * 4 + 3}rem`,
             height: `${duration * 4}rem`,
+            width: layout.width,
+            left: layout.left
         };
     };
 
@@ -161,32 +206,44 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
                 </div>
 
                 {/* Days Columns */}
-                {DAYS.map((day, dayIndex) => (
-                    <div key={day} className="col-span-1 relative min-w-[120px] border-r border-gray-100 last:border-r-0">
-                        <div className="text-center text-sm font-medium py-3 border-b border-gray-100 bg-white sticky top-0 z-10 text-slate-600">
-                            {day}
-                        </div>
+                {DAYS.map((day, dayIndex) => {
+                    // Filter events for this day
+                    const dayEvents = events.filter(event => {
+                        const eventDate = new Date(event.date);
+                        const eventDayIndex = (eventDate.getDay() + 6) % 7;
+                        return eventDayIndex === dayIndex;
+                    });
 
-                        {/* Grid Lines */}
-                        <div className="absolute inset-0 top-12 pointer-events-none">
-                            {HOURS.map(hour => (
-                                <div key={hour} className="h-16 border-b border-gray-50" />
-                            ))}
-                        </div>
+                    // Calculate layout for this day
+                    const layoutMap = calculateEventLayout(dayEvents);
 
-                        {/* Events */}
-                        {events
-                            .filter(event => getEventPosition(event).dayIndex === dayIndex)
-                            .map(event => {
-                                const pos = getEventPosition(event);
+                    return (
+                        <div key={day} className="col-span-1 relative min-w-[120px] border-r border-gray-100 last:border-r-0">
+                            <div className="text-center text-sm font-medium py-3 border-b border-gray-100 bg-white sticky top-0 z-10 text-slate-600">
+                                {day}
+                            </div>
+
+                            {/* Grid Lines */}
+                            <div className="absolute inset-0 top-12 pointer-events-none">
+                                {HOURS.map(hour => (
+                                    <div key={hour} className="h-16 border-b border-gray-50" />
+                                ))}
+                            </div>
+
+                            {/* Events */}
+                            {dayEvents.map(event => {
+                                const layout = layoutMap.get(event.id) || { width: '90%', left: '5%' };
+                                const pos = getEventPosition(event, layout);
                                 return (
                                     <div
                                         key={event.id}
                                         onClick={() => setSelectedEvent(event)}
-                                        className={`absolute w-[90%] left-[5%] rounded-md p-2 text-xs font-medium cursor-pointer hover:shadow-md transition-all border ${getEventColor(event)}`}
+                                        className={`absolute rounded-md p-2 text-xs font-medium cursor-pointer hover:shadow-md transition-all border ${getEventColor(event)} z-10 hover:z-20`}
                                         style={{
                                             top: pos.top,
                                             height: pos.height,
+                                            width: pos.width,
+                                            left: pos.left,
                                         }}
                                     >
                                         <div className="font-bold truncate">{event.group.name}</div>
@@ -200,8 +257,9 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
                                     </div>
                                 );
                             })}
-                    </div>
-                ))}
+                        </div>
+                    );
+                })}
             </div>
 
             <EventDetailsModal

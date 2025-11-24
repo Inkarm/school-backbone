@@ -49,6 +49,41 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { date, startTime, endTime, groupId, trainerId, roomId } = body;
 
+        // Check for conflicts if room is specified
+        if (roomId) {
+            const conflict = await prisma.scheduleEvent.findFirst({
+                where: {
+                    roomId: parseInt(roomId),
+                    date: new Date(date),
+                    status: { not: 'CANCELLED' }, // Ignore cancelled events
+                    OR: [
+                        {
+                            // New starts during existing
+                            startTime: { lte: startTime },
+                            endTime: { gt: startTime }
+                        },
+                        {
+                            // New ends during existing
+                            startTime: { lt: endTime },
+                            endTime: { gte: endTime }
+                        },
+                        {
+                            // New encloses existing
+                            startTime: { gte: startTime },
+                            endTime: { lte: endTime }
+                        }
+                    ]
+                }
+            });
+
+            if (conflict) {
+                return NextResponse.json(
+                    { error: 'Sala jest zajęta w tym terminie!' },
+                    { status: 409 }
+                );
+            }
+        }
+
         const event = await prisma.scheduleEvent.create({
             data: {
                 date: new Date(date),

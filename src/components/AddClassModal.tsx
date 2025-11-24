@@ -73,13 +73,16 @@ export default function AddClassModal({ isOpen, onClose, onSuccess }: AddClassMo
                 body: JSON.stringify(formData),
             });
 
-            if (!response.ok) throw new Error('Failed to create class');
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to create class');
+            }
 
             onSuccess?.();
             onClose();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            alert('Nie udało się dodać zajęć');
+            alert(err.message || 'Nie udało się dodać zajęć');
         } finally {
             setLoading(false);
         }
