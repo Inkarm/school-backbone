@@ -10,10 +10,8 @@ interface Student {
     parentName: string;
     parentPhone: string;
     groups: Array<{
-        group: {
-            id: number;
-            name: string;
-        };
+        id: number;
+        name: string;
     }>;
 }
 
