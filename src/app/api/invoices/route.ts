@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { auth } from '@/auth';
 
 export async function GET(request: Request) {
+    const session = await auth();
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const { searchParams } = new URL(request.url);
         const studentId = searchParams.get('studentId');
@@ -50,6 +56,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+    const session = await auth();
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const body = await request.json();
         const { studentId, issueDate, dueDate, items } = body;

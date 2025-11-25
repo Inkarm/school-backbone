@@ -8,6 +8,8 @@ export interface User {
     phone: string | null;
     bio: string | null;
     color: string | null;
+    accessLevel?: number;
+    accessibleGroups?: Group[];
 }
 
 export interface Student {

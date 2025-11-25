@@ -1,43 +1,141 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { auth } from '@/auth';
 
-export async function POST(request: NextRequest) {
+// GET /api/attendance?eventId=X
+// Get attendance records for a specific event
+export async function GET(request: NextRequest) {
+    const session = await auth();
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
-        const body = await request.json();
-        const { eventId, attendance } = body;
+        const { searchParams } = new URL(request.url);
+        const eventId = searchParams.get('eventId');
 
-        // attendance is an array of { studentId: number, status: string }
-
-        if (!eventId || !Array.isArray(attendance)) {
+        if (!eventId) {
             return NextResponse.json(
-                { error: 'Invalid input data' },
+                { error: 'eventId is required' },
                 { status: 400 }
             );
         }
 
-        // Strategy: Delete all existing attendance for this event and re-create.
-        // This handles updates and new records in one go, assuming the frontend sends the full state.
-        // This avoids the need for a unique constraint on [eventId, studentId] for upsert,
-        // although adding that constraint would be better practice in the long run.
+        // Fetch all attendance records for the event
+        const attendance = await prisma.attendance.findMany({
+            where: {
+                eventId: parseInt(eventId),
+            },
+            include: {
+                student: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        // parentName: true, // Removed as it was not in original select
+                    },
+                },
+            },
+            orderBy: {
+                student: {
+                    lastName: 'asc',
+                },
+            },
+        });
 
-        await prisma.$transaction([
-            prisma.attendance.deleteMany({
-                where: { eventId: parseInt(eventId) },
-            }),
-            prisma.attendance.createMany({
-                data: attendance.map((r: any) => ({
-                    eventId: parseInt(eventId),
-                    studentId: r.studentId,
-                    status: r.status,
-                })),
-            }),
-        ]);
+        return NextResponse.json(attendance);
+    } catch (error) {
+        console.error('Error fetching attendance:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch attendance' },
+            { status: 500 }
+        );
+    }
+}
 
-        return NextResponse.json({ message: 'Attendance saved successfully' });
+// POST /api/attendance
+// Bulk save/update attendance for an event
+// Body: { eventId: number, attendance: [{ studentId: number, present: boolean }] }
+export async function POST(request: NextRequest) {
+    const session = await auth();
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    try {
+        const body = await request.json();
+        const { eventId, attendance } = body;
+
+        if (!eventId || !attendance || !Array.isArray(attendance)) {
+            return NextResponse.json(
+                { error: 'eventId and attendance array are required' },
+                { status: 400 }
+            );
+        }
+
+        // Verify event exists
+        const event = await prisma.scheduleEvent.findUnique({
+            where: { id: eventId },
+            include: {
+                group: {
+                    include: {
+                        students: true,
+                    },
+                },
+            },
+        });
+
+        if (!event) {
+            return NextResponse.json(
+                { error: 'Event not found' },
+                { status: 404 }
+            );
+        }
+
+        // Verify all students belong to the event's group
+        const groupStudentIds = event.group.students.map(s => s.id);
+        const invalidStudents = attendance.filter(
+            a => !groupStudentIds.includes(a.studentId)
+        );
+
+        if (invalidStudents.length > 0) {
+            return NextResponse.json(
+                { error: 'Some students do not belong to this group' },
+                { status: 400 }
+            );
+        }
+
+        // Bulk upsert attendance records
+        const results = await Promise.all(
+            attendance.map(({ studentId, present }) =>
+                prisma.attendance.upsert({
+                    where: {
+                        studentId_eventId: {
+                            studentId,
+                            eventId,
+                        },
+                    },
+                    update: {
+                        present,
+                        updatedAt: new Date(),
+                    },
+                    create: {
+                        studentId,
+                        eventId,
+                        present,
+                    },
+                })
+            )
+        );
+
+        return NextResponse.json({
+            message: 'Attendance saved successfully',
+            count: results.length,
+        });
     } catch (error) {
         console.error('Error saving attendance:', error);
         return NextResponse.json(
-            { error: 'Failed to save attendance' },
+            { error: 'Failed to save attendance', details: error instanceof Error ? error.message : 'Unknown error' },
             { status: 500 }
         );
     }

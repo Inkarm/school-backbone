@@ -1,10 +1,11 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { authenticate } from '@/app/lib/actions';
 
 export default function LoginPage() {
-    const [errorMessage, dispatch] = useFormState(authenticate, undefined);
+    const [errorMessage, dispatch] = useActionState(authenticate, undefined);
 
     return (
         <main className="flex items-center justify-center md:h-screen bg-slate-50">

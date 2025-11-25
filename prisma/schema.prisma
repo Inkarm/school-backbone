@@ -30,10 +30,12 @@ model User {
   phone     String?
   bio       String?
   color     String? // Hex color for calendar
+  accessLevel Int     @default(1) // 1=Own, 2=All, 3=Custom
 
   // Relations
-  groups         Group[]         @relation("DefaultTrainer")
-  scheduleEvents ScheduleEvent[] @relation("EventTrainer")
+  groups           Group[]         @relation("GroupDefaultTrainer")
+  scheduleEvents   ScheduleEvent[] @relation("EventTrainer")
+  accessibleGroups Group[]         @relation("TrainerAccessibleGroups")
 }
 
 model Student {
@@ -81,9 +83,10 @@ model Group {
   monthlyFee     Float  @default(0.0)
 
   // Relations
-  defaultTrainer User?           @relation("DefaultTrainer", fields: [defaultTrainerId], references: [id])
-  students       Student[]       @relation("StudentGroups")
-  scheduleEvents ScheduleEvent[]
+  defaultTrainer  User?           @relation("GroupDefaultTrainer", fields: [defaultTrainerId], references: [id])
+  students        Student[]       @relation("StudentGroups")
+  scheduleEvents  ScheduleEvent[]
+  allowedTrainers User[]          @relation("TrainerAccessibleGroups")
 }
 
 model ScheduleEvent {
@@ -114,14 +117,20 @@ model Room {
 }
 
 model Attendance {
-  id        Int    @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   eventId   Int
   studentId Int
-  status    String // 'present', 'absent'
+  present   Boolean       @default(false) // true = present, false = absent
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   // Relations
-  event   ScheduleEvent @relation(fields: [eventId], references: [id])
-  student Student       @relation(fields: [studentId], references: [id])
+  event   ScheduleEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  student Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, eventId])
+  @@index([eventId])
+  @@index([studentId])
 }
 
 model Payment {

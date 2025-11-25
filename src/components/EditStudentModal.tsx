@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
+import AttendanceHistoryModal from '@/components/AttendanceHistoryModal';
 import { Student } from '@/types';
 
 interface EditStudentModalProps {
@@ -23,8 +24,9 @@ export default function EditStudentModal({ isOpen, onClose, onSuccess, student }
         healthNotes: '',
     });
 
-    const [activeTab, setActiveTab] = useState<'details' | 'payments'>('details');
+    const [activeTab, setActiveTab] = useState<'details' | 'payments' | 'attendance'>('details');
     const [payments, setPayments] = useState<any[]>([]);
+    const [showAttendanceHistory, setShowAttendanceHistory] = useState(false);
 
     useEffect(() => {
         if (student) {
@@ -95,6 +97,12 @@ export default function EditStudentModal({ isOpen, onClose, onSuccess, student }
                     onClick={() => setActiveTab('payments')}
                 >
                     Historia Płatności
+                </button>
+                <button
+                    className={`px-4 py-2 text-sm font-medium ${activeTab === 'attendance' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                    onClick={() => setActiveTab('attendance')}
+                >
+                    Obecność
                 </button>
             </div>
 
@@ -223,6 +231,36 @@ export default function EditStudentModal({ isOpen, onClose, onSuccess, student }
                         </table>
                     </div>
                 </div>
+            )}
+
+            {activeTab === 'attendance' && (
+                <div className="text-center py-12 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border-2 border-dashed border-indigo-200">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-indigo-100 mb-4">
+                        <span className="text-4xl">📊</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">Historia obecności</h3>
+                    <p className="text-sm text-slate-600 mb-6 max-w-md mx-auto">
+                        Zobacz szczegółową historię obecności, statystyki frekwencji oraz miesięczny rozkład obecności ucznia
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => setShowAttendanceHistory(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    >
+                        <span>📅</span>
+                        <span className="font-medium">Pokaż historię obecności</span>
+                    </button>
+                </div>
+            )}
+
+            {/* Attendance History Modal */}
+            {student && (
+                <AttendanceHistoryModal
+                    isOpen={showAttendanceHistory}
+                    onClose={() => setShowAttendanceHistory(false)}
+                    studentId={student.id}
+                    studentName={`${student.firstName} ${student.lastName}`}
+                />
             )}
         </Modal>
     );

@@ -40,7 +40,7 @@ export async function GET(
                 id: student.id,
                 firstName: student.firstName,
                 lastName: student.lastName,
-                status: record ? record.status : null, // null means not yet checked
+                present: record ? record.present : null, // null means not yet checked
             };
         });
 

@@ -9,9 +9,10 @@ interface EditEventModalProps {
     onClose: () => void;
     onSuccess?: () => void;
     event: any; // Using any for now, ideally ScheduleEvent with relations
+    readOnly?: boolean;
 }
 
-export default function EditEventModal({ isOpen, onClose, onSuccess, event }: EditEventModalProps) {
+export default function EditEventModal({ isOpen, onClose, onSuccess, event, readOnly = false }: EditEventModalProps) {
     const [loading, setLoading] = useState(false);
     const [trainers, setTrainers] = useState<User[]>([]);
     const [rooms, setRooms] = useState<Room[]>([]);
@@ -113,7 +114,7 @@ export default function EditEventModal({ isOpen, onClose, onSuccess, event }: Ed
     const isSubstitution = event.group?.defaultTrainerId && parseInt(formData.trainerId) !== event.group.defaultTrainerId;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={`Edycja Zajęć: ${event.group?.name || ''}`}>
+        <Modal isOpen={isOpen} onClose={onClose} title={readOnly ? `Szczegóły Zajęć: ${event.group?.name || ''}` : `Edycja Zajęć: ${event.group?.name || ''}`}>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -124,6 +125,7 @@ export default function EditEventModal({ isOpen, onClose, onSuccess, event }: Ed
                             onChange={e => setFormData({ ...formData, date: e.target.value })}
                             className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                             required
+                            disabled={readOnly}
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -135,6 +137,7 @@ export default function EditEventModal({ isOpen, onClose, onSuccess, event }: Ed
                                 onChange={e => setFormData({ ...formData, startTime: e.target.value })}
                                 className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                 required
+                                disabled={readOnly}
                             />
                         </div>
                         <div>
@@ -145,6 +148,7 @@ export default function EditEventModal({ isOpen, onClose, onSuccess, event }: Ed
                                 onChange={e => setFormData({ ...formData, endTime: e.target.value })}
                                 className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                 required
+                                disabled={readOnly}
                             />
                         </div>
                     </div>
@@ -158,6 +162,7 @@ export default function EditEventModal({ isOpen, onClose, onSuccess, event }: Ed
                             onChange={e => setFormData({ ...formData, trainerId: e.target.value })}
                             className={`w-full p-2 border rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${isSubstitution ? 'border-amber-300 bg-amber-50' : 'border-gray-200'}`}
                             required
+                            disabled={readOnly}
                         >
                             {trainers.map(t => (
                                 <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>
@@ -173,6 +178,7 @@ export default function EditEventModal({ isOpen, onClose, onSuccess, event }: Ed
                             value={formData.roomId}
                             onChange={e => setFormData({ ...formData, roomId: e.target.value })}
                             className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            disabled={readOnly}
                         >
                             <option value="">Brak sali</option>
                             {rooms.map(r => (
@@ -188,6 +194,7 @@ export default function EditEventModal({ isOpen, onClose, onSuccess, event }: Ed
                         value={formData.status}
                         onChange={e => setFormData({ ...formData, status: e.target.value })}
                         className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        disabled={readOnly}
                     >
                         <option value="SCHEDULED">Zaplanowane</option>
                         <option value="CANCELLED">Odwołane</option>
@@ -202,24 +209,29 @@ export default function EditEventModal({ isOpen, onClose, onSuccess, event }: Ed
                         onChange={e => setFormData({ ...formData, description: e.target.value })}
                         className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         rows={2}
+                        disabled={readOnly}
                     />
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t border-gray-100 mt-2">
-                    <button
-                        type="button"
-                        onClick={handleDelete}
-                        className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors mr-auto"
-                        disabled={loading}
-                    >
-                        Usuń
-                    </button>
+                    {!readOnly && (
+                        <button
+                            type="button"
+                            onClick={handleDelete}
+                            className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors mr-auto"
+                            disabled={loading}
+                        >
+                            Usuń
+                        </button>
+                    )}
                     <button type="button" onClick={onClose} className="btn-secondary" disabled={loading}>
-                        Anuluj
+                        {readOnly ? 'Zamknij' : 'Anuluj'}
                     </button>
-                    <button type="submit" className="btn-primary" disabled={loading}>
-                        {loading ? 'Zapisywanie...' : 'Zapisz Zmiany'}
-                    </button>
+                    {!readOnly && (
+                        <button type="submit" className="btn-primary" disabled={loading}>
+                            {loading ? 'Zapisywanie...' : 'Zapisz Zmiany'}
+                        </button>
+                    )}
                 </div>
             </form>
         </Modal>

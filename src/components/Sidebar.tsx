@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { logout } from '@/app/lib/actions';
 
 interface SidebarProps {
@@ -13,18 +14,25 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) => {
     const pathname = usePathname();
+    const { data: session } = useSession();
+    const userRole = session?.user?.role;
 
     const navItems = [
-        { label: 'Pulpit', href: '/', icon: '⊞' },
-        { label: 'Uczniowie', href: '/students', icon: '👥' },
-        { label: 'Grupy', href: '/groups', icon: '👥' },
-        { label: 'Sale', href: '/rooms', icon: '🏢' },
-        { label: 'Trenerzy', href: '/trainers', icon: '👨‍🏫' },
-        { label: 'Grafik', href: '/schedule', icon: '📅' },
-        { label: 'Obecność', href: '/attendance', icon: '✅' },
-        { label: 'Płatności', href: '/finances', icon: '💳' },
-        { label: 'Raporty', href: '/reports', icon: '📄' },
+        { label: 'Pulpit', href: '/', icon: '⊞', roles: ['ADMIN', 'TRAINER'] },
+        { label: 'Uczniowie', href: '/students', icon: '👥', roles: ['ADMIN'] },
+        { label: 'Grupy', href: '/groups', icon: '👥', roles: ['ADMIN'] },
+        { label: 'Sale', href: '/rooms', icon: '🏢', roles: ['ADMIN'] },
+        { label: 'Trenerzy', href: '/trainers', icon: '👨‍🏫', roles: ['ADMIN'] },
+        { label: 'Grafik', href: '/schedule', icon: '📅', roles: ['ADMIN', 'TRAINER'] },
+        { label: 'Obecność', href: '/attendance', icon: '✅', roles: ['ADMIN', 'TRAINER'] },
+        { label: 'Płatności', href: '/finances', icon: '💳', roles: ['ADMIN'] },
+        { label: 'Raporty', href: '/reports', icon: '📄', roles: ['ADMIN'] },
     ];
+
+    // Filter navigation based on user role
+    const filteredNavItems = navItems.filter(item =>
+        item.roles.includes(userRole || 'ADMIN')
+    );
 
     return (
         <>
@@ -46,7 +54,9 @@ const Sidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCollaps
                     {!isCollapsed && (
                         <div>
                             <h1 className="text-xl font-bold text-slate-900">Poezja Tańca</h1>
-                            <p className="text-xs text-slate-500 mt-1">Panel zarządzania</p>
+                            <p className="text-xs text-slate-500 mt-1">
+                                {userRole === 'ADMIN' ? 'Panel zarządzania' : 'Panel trenera'}
+                            </p>
                         </div>
                     )}
                     {isCollapsed && (
@@ -65,7 +75,7 @@ const Sidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCollaps
                 </div>
 
                 <nav className="flex-1 px-3 space-y-1 overflow-y-auto overflow-x-hidden">
-                    {navItems.map((item) => {
+                    {filteredNavItems.map((item) => {
                         const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
                         return (
                             <Link

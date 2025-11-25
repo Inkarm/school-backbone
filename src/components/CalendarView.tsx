@@ -11,9 +11,10 @@ interface CalendarViewProps {
     refreshTrigger?: number;
     filterTrainerId?: number;
     filterRoomId?: number;
+    readOnly?: boolean;
 }
 
-export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filterRoomId }: CalendarViewProps) {
+export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filterRoomId, readOnly = false }: CalendarViewProps) {
     const [currentWeek, setCurrentWeek] = useState(new Date());
     const [events, setEvents] = useState<ScheduleEvent[]>([]);
     const [loading, setLoading] = useState(true);
@@ -454,12 +455,15 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                 )}
             </div>
 
-            <EditEventModal
-                isOpen={!!selectedEvent}
-                onClose={() => setSelectedEvent(null)}
-                onSuccess={fetchEvents}
-                event={selectedEvent}
-            />
+            {selectedEvent && (
+                <EditEventModal
+                    isOpen={!!selectedEvent}
+                    onClose={() => setSelectedEvent(null)}
+                    onSuccess={fetchEvents}
+                    event={selectedEvent}
+                    readOnly={readOnly}
+                />
+            )}
         </div>
     );
 }

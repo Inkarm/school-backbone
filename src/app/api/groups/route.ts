@@ -1,11 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+import { auth } from '@/auth';
+
 export async function GET() {
+    const session = await auth();
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
+        const userRole = session?.user?.role;
+        const userId = session?.user?.id ? parseInt(session.user.id) : null;
+
+        let whereClause: any = {};
+
+        if (userRole === 'TRAINER' && userId) {
+            // Fetch fresh user data to get access level
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                include: { accessibleGroups: true } // For Level 3
+            });
+
+            if (user) {
+                if (user.accessLevel === 1) {
+                    // Level 1: Only own groups
+                    whereClause = { defaultTrainerId: userId };
+                } else if (user.accessLevel === 3) {
+                    // Level 3: Own groups + Accessible groups
+                    whereClause = {
+                        OR: [
+                            { defaultTrainerId: userId },
+                            { id: { in: user.accessibleGroups.map((g: { id: number }) => g.id) } }
+                        ]
+                    };
+                }
+                // Level 2 (Manager): No filter (sees all)
+            }
+        }
+
         const groups = await prisma.group.findMany({
+            where: whereClause,
             include: {
                 students: true,
+                defaultTrainer: true, // Include trainer info
             },
             orderBy: {
                 name: 'asc',
@@ -23,6 +61,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+    const session = await auth();
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const body = await request.json();
         const { name, monthlyFee } = body;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 export async function PUT(
     request: NextRequest,
@@ -17,11 +18,18 @@ export async function PUT(
             phone,
             bio,
             color,
+            accessLevel: body.accessLevel,
         };
 
-        // Only update password if provided
+        if (body.accessibleGroups) {
+            updateData.accessibleGroups = {
+                set: body.accessibleGroups.map((id: number) => ({ id }))
+            };
+        }
+
+        // Only update password if provided - hash it first!
         if (password) {
-            updateData.password = password; // Should be hashed!
+            updateData.password = await bcrypt.hash(password, 10);
         }
 
         const user = await prisma.user.update({
@@ -36,6 +44,8 @@ export async function PUT(
                 email: true,
                 phone: true,
                 color: true,
+                accessLevel: true,
+                accessibleGroups: true,
             },
         });
 

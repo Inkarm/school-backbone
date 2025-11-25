@@ -44,7 +44,7 @@ export default function AddClassModal({ isOpen, onClose, onSuccess, selectedDate
         try {
             const [groupsRes, trainersRes, roomsRes] = await Promise.all([
                 fetch('/api/groups'),
-                fetch('/api/users?role=trainer'),
+                fetch('/api/users?role=TRAINER'),
                 fetch('/api/rooms')
             ]);
 

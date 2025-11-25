@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 
 interface AddTrainerModalProps {
@@ -11,6 +11,7 @@ interface AddTrainerModalProps {
 
 export default function AddTrainerModal({ isOpen, onClose, onSuccess }: AddTrainerModalProps) {
     const [loading, setLoading] = useState(false);
+    const [groups, setGroups] = useState<{ id: number; name: string }[]>([]);
     const [formData, setFormData] = useState({
         login: '',
         password: '',
@@ -19,8 +20,16 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess }: AddTrain
         email: '',
         phone: '',
         bio: '',
-        color: '#4f46e5', // Default indigo
+        color: '#4f46e5',
+        accessLevel: 1,
+        accessibleGroups: [] as number[],
     });
+
+    useEffect(() => {
+        if (isOpen) {
+            fetch('/api/groups').then(res => res.json()).then(data => setGroups(data)).catch(console.error);
+        }
+    }, [isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,7 +42,10 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess }: AddTrain
                 body: JSON.stringify({ ...formData, role: 'TRAINER' }),
             });
 
-            if (!response.ok) throw new Error('Failed to create trainer');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.details || errorData.error || 'Failed to create trainer');
+            }
 
             setFormData({
                 login: '',
@@ -44,13 +56,15 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess }: AddTrain
                 phone: '',
                 bio: '',
                 color: '#4f46e5',
+                accessLevel: 1,
+                accessibleGroups: [],
             });
 
             onSuccess?.();
             onClose();
         } catch (err) {
             console.error(err);
-            alert('Nie udało się dodać trenera');
+            alert(err instanceof Error ? err.message : 'Nie udało się dodać trenera');
         } finally {
             setLoading(false);
         }
@@ -145,6 +159,48 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess }: AddTrain
                         className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         rows={3}
                     />
+                </div>
+
+                <div className="border-t border-gray-100 pt-4">
+                    <h3 className="text-sm font-bold text-slate-900 mb-3">Uprawnienia</h3>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Poziom Dostępu</label>
+                        <select
+                            value={formData.accessLevel}
+                            onChange={e => setFormData({ ...formData, accessLevel: parseInt(e.target.value) })}
+                            className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        >
+                            <option value={1}>Poziom 1: Tylko własne grupy (Domyślny)</option>
+                            <option value={2}>Poziom 2: Manager (Wszystkie grupy)</option>
+                            <option value={3}>Poziom 3: Custom (Własne + Wybrane)</option>
+                        </select>
+                    </div>
+
+                    {formData.accessLevel === 3 && (
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Dostępne Grupy (Custom)</label>
+                            <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1">
+                                {groups.map(group => (
+                                    <label key={group.id} className="flex items-center gap-2 p-1 hover:bg-slate-50 rounded cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.accessibleGroups.includes(group.id)}
+                                            onChange={e => {
+                                                const newGroups = e.target.checked
+                                                    ? [...formData.accessibleGroups, group.id]
+                                                    : formData.accessibleGroups.filter(id => id !== group.id);
+                                                setFormData({ ...formData, accessibleGroups: newGroups });
+                                            }}
+                                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <span className="text-sm text-slate-700">{group.name}</span>
+                                    </label>
+                                ))}
+                                {groups.length === 0 && <p className="text-xs text-slate-500 p-1">Brak grup do wyboru</p>}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex gap-3 pt-4">
