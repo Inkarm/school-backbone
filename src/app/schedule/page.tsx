@@ -2,29 +2,79 @@
 
 import CalendarView from '@/components/CalendarView';
 import AddClassModal from '@/components/AddClassModal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function SchedulePage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+    // Filters
+    const [selectedTrainerId, setSelectedTrainerId] = useState<string>('');
+    const [selectedRoomId, setSelectedRoomId] = useState<string>('');
+    const [trainers, setTrainers] = useState<{ id: number; firstName: string; lastName: string }[]>([]);
+    const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [trainersRes, roomsRes] = await Promise.all([
+                    fetch('/api/users?role=TRAINER'),
+                    fetch('/api/rooms')
+                ]);
+                if (trainersRes.ok) setTrainers(await trainersRes.json());
+                if (roomsRes.ok) setRooms(await roomsRes.json());
+            } catch (e) {
+                console.error('Failed to fetch filters', e);
+            }
+        };
+        fetchData();
+    }, []);
+
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="space-y-4 md:space-y-6 h-[calc(100vh-80px)] md:h-[calc(100vh-100px)] flex flex-col">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end shrink-0 gap-4 md:gap-0">
                 <div>
-                    <h2 className="text-3xl font-bold">Grafik Zajęć</h2>
-                    <p className="text-[hsl(var(--text-muted))]">Zarządzaj planem zajęć na ten tydzień.</p>
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-900">Grafik Zajęć</h2>
+                    <p className="text-sm md:text-base text-slate-500">Zarządzaj planem zajęć.</p>
                 </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="btn-primary"
-                >
-                    + Dodaj Zajęcia
-                </button>
+                <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                    <div className="flex gap-2 w-full md:w-auto">
+                        <select
+                            className="input-field flex-1 md:min-w-[150px]"
+                            value={selectedTrainerId}
+                            onChange={(e) => setSelectedTrainerId(e.target.value)}
+                        >
+                            <option value="">Wszyscy trenerzy</option>
+                            {trainers.map(t => (
+                                <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>
+                            ))}
+                        </select>
+                        <select
+                            className="input-field flex-1 md:min-w-[150px]"
+                            value={selectedRoomId}
+                            onChange={(e) => setSelectedRoomId(e.target.value)}
+                        >
+                            <option value="">Wszystkie sale</option>
+                            {rooms.map(r => (
+                                <option key={r.id} value={r.id}>{r.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="btn-primary w-full md:w-auto justify-center"
+                    >
+                        + Dodaj Zajęcia
+                    </button>
+                </div>
             </div>
 
-            <div className="glass-panel p-6 min-h-[600px]">
-                <CalendarView refreshTrigger={refreshTrigger} />
+            <div className="flex-1 min-h-0 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <CalendarView
+                    refreshTrigger={refreshTrigger}
+                    filterTrainerId={selectedTrainerId ? parseInt(selectedTrainerId) : undefined}
+                    filterRoomId={selectedRoomId ? parseInt(selectedRoomId) : undefined}
+                />
             </div>
 
             <AddClassModal

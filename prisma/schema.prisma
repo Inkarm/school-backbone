@@ -11,11 +11,17 @@ datasource db {
 }
 
 
+enum Role {
+  ADMIN
+  TRAINER
+  PARENT
+}
+
 model User {
   id       Int    @id @default(autoincrement())
   login    String @unique
   password String
-  role     String // 'admin', 'trainer'
+  role     Role   @default(TRAINER)
 
   // Profile Data
   firstName String?
@@ -40,6 +46,8 @@ model Student {
   parentEmail String?
   healthNotes String?
   notes       String?
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
 
   // Computed name for backward compatibility if needed, or just remove 'name' field
   // For now replacing 'name' with firstName/lastName structure
@@ -48,6 +56,21 @@ model Student {
   groups     Group[]      @relation("StudentGroups")
   attendance Attendance[]
   payments   Payment[]
+  invoices   Invoice[]
+}
+
+model Invoice {
+  id        Int      @id @default(autoincrement())
+  number    String   @unique
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id])
+  issueDate DateTime
+  dueDate   DateTime
+  amount    Float
+  status    String   // DRAFT, ISSUED, PAID, CANCELLED
+  items     Json     // Array of { description, quantity, price }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Group {
@@ -55,6 +78,7 @@ model Group {
   name           String
   defaultTrainerId Int?
   ratePerClass   Float  @default(0.0)
+  monthlyFee     Float  @default(0.0)
 
   // Relations
   defaultTrainer User?           @relation("DefaultTrainer", fields: [defaultTrainerId], references: [id])

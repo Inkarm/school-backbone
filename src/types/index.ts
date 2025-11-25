@@ -1,7 +1,7 @@
 export interface User {
     id: number;
     login: string;
-    role: string;
+    role: 'ADMIN' | 'TRAINER' | 'PARENT';
     firstName: string | null;
     lastName: string | null;
     email: string | null;
@@ -30,6 +30,7 @@ export interface Group {
     name: string;
     defaultTrainerId: number | null;
     ratePerClass: number;
+    monthlyFee: number;
     defaultTrainer?: User | null;
     students?: Student[];
     scheduleEvents?: ScheduleEvent[];
@@ -73,5 +74,21 @@ export interface Payment {
     monthYear: string;
     paymentDate: string; // ISO string
     method: string;
+    student?: Student;
+}
+
+export interface Invoice {
+    id: number;
+    number: string;
+    studentId: number;
+    issueDate: string; // ISO string
+    dueDate: string; // ISO string
+    amount: number;
+    status: 'DRAFT' | 'ISSUED' | 'PAID' | 'CANCELLED';
+    items: Array<{
+        description: string;
+        quantity: number;
+        price: number;
+    }>;
     student?: Student;
 }

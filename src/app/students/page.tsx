@@ -10,14 +10,14 @@ export default function StudentsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0">
                 <div>
-                    <h2 className="text-3xl font-bold">Uczniowie</h2>
-                    <p className="text-[hsl(var(--text-muted))]">Baza kontaktowa Twoich podopiecznych.</p>
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-900">Uczniowie</h2>
+                    <p className="text-sm md:text-base text-slate-500">Baza kontaktowa Twoich podopiecznych.</p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="btn-primary"
+                    className="btn-primary w-full md:w-auto justify-center"
                 >
                     + Dodaj Ucznia
                 </button>

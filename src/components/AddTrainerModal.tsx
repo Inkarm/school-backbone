@@ -30,7 +30,7 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess }: AddTrain
             const response = await fetch('/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, role: 'trainer' }),
+                body: JSON.stringify({ ...formData, role: 'TRAINER' }),
             });
 
             if (!response.ok) throw new Error('Failed to create trainer');

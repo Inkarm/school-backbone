@@ -34,12 +34,12 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
 
             {/* Modal Panel */}
             <div
-                className={`relative w-full ${maxWidth} bg-white rounded-xl shadow-2xl transform transition-all duration-200 ${isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'} m-4`}
+                className={`relative w-full ${maxWidth} bg-white rounded-xl shadow-2xl transform transition-all duration-200 ${isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'} m-2 md:m-4`}
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                    <h3 className="text-xl font-bold text-slate-900">{title}</h3>
+                <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-100">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900">{title}</h3>
                     <button
                         onClick={onClose}
                         className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-full hover:bg-slate-100"
@@ -51,7 +51,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
                 </div>
 
                 {/* Content */}
-                <div className="p-6">
+                <div className="p-4 md:p-6">
                     {children}
                 </div>
             </div>

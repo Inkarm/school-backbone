@@ -17,7 +17,7 @@ export default function TrainersPage() {
 
     const fetchTrainers = async () => {
         try {
-            const res = await fetch('/api/users?role=trainer');
+            const res = await fetch('/api/users?role=TRAINER');
             if (res.ok) setTrainers(await res.json());
         } catch (e) { console.error(e); }
         finally { setLoading(false); }

@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
         const studentId = searchParams.get('studentId');
+        const groupId = searchParams.get('groupId');
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
 
@@ -12,6 +13,15 @@ export async function GET(request: NextRequest) {
             where: {
                 AND: [
                     studentId ? { studentId: parseInt(studentId) } : {},
+                    groupId ? {
+                        student: {
+                            groups: {
+                                some: {
+                                    id: parseInt(groupId)
+                                }
+                            }
+                        }
+                    } : {},
                     startDate ? { paymentDate: { gte: new Date(startDate) } } : {},
                     endDate ? { paymentDate: { lte: new Date(endDate) } } : {},
                 ],
@@ -37,6 +47,24 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
+
+        // Handle bulk creation (array)
+        if (Array.isArray(body)) {
+            const payments = await prisma.$transaction(
+                body.map((payment: any) => prisma.payment.create({
+                    data: {
+                        studentId: parseInt(payment.studentId),
+                        amount: parseFloat(payment.amount),
+                        paymentDate: new Date(payment.paymentDate),
+                        method: payment.method,
+                        monthYear: payment.monthYear,
+                    }
+                }))
+            );
+            return NextResponse.json(payments, { status: 201 });
+        }
+
+        // Handle single creation (legacy support)
         const { studentId, amount, paymentDate, method, monthYear } = body;
 
         if (!studentId || !amount || !paymentDate) {

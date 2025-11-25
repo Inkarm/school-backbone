@@ -86,44 +86,79 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
                     <p className="text-slate-500">Brak uczniów do wyświetlenia</p>
                 </div>
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-gray-200">
-                                <th className="p-4 font-medium">Imię i Nazwisko</th>
-                                <th className="p-4 font-medium">Opiekun</th>
-                                <th className="p-4 font-medium">Telefon</th>
-                                <th className="p-4 font-medium">Grupy</th>
-                                <th className="p-4 font-medium">Akcje</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {students.map(student => (
-                                <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
-                                    <td className="p-4 font-medium text-slate-900">
-                                        {student.firstName} {student.lastName}
-                                    </td>
-                                    <td className="p-4 text-slate-500">{student.parentName}</td>
-                                    <td className="p-4 font-mono text-sm text-slate-500">{student.parentPhone}</td>
-                                    <td className="p-4">
-                                        <div className="flex gap-2 flex-wrap">
-                                            {student.groups.map((group) => (
-                                                <span key={group.id} className="px-2 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium">
-                                                    {group.name}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <Link href={`/students/${student.id}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors">
-                                            Szczegóły
-                                        </Link>
-                                    </td>
+                <>
+                    {/* Mobile Card View */}
+                    <div className="grid grid-cols-1 gap-4 md:hidden">
+                        {students.map(student => (
+                            <div key={student.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-3">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h3 className="font-bold text-slate-900">{student.firstName} {student.lastName}</h3>
+                                        <p className="text-sm text-slate-500">{student.parentName}</p>
+                                    </div>
+                                    <Link href={`/students/${student.id}`} className="text-indigo-600 font-medium text-sm bg-indigo-50 px-3 py-1 rounded-full">
+                                        Szczegóły
+                                    </Link>
+                                </div>
+
+                                <div className="text-sm text-slate-600 flex items-center gap-2">
+                                    <span>📞</span>
+                                    <span className="font-mono">{student.parentPhone}</span>
+                                </div>
+
+                                {student.groups.length > 0 && (
+                                    <div className="flex gap-2 flex-wrap pt-2 border-t border-gray-100">
+                                        {student.groups.map((group) => (
+                                            <span key={group.id} className="px-2 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium">
+                                                {group.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                                    <th className="p-4 font-medium">Imię i Nazwisko</th>
+                                    <th className="p-4 font-medium">Opiekun</th>
+                                    <th className="p-4 font-medium">Telefon</th>
+                                    <th className="p-4 font-medium">Grupy</th>
+                                    <th className="p-4 font-medium">Akcje</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {students.map(student => (
+                                    <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
+                                        <td className="px-4 py-3 font-medium text-slate-900">
+                                            {student.firstName} {student.lastName}
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-500">{student.parentName}</td>
+                                        <td className="px-4 py-3 font-mono text-sm text-slate-500">{student.parentPhone}</td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex gap-2 flex-wrap">
+                                                {student.groups.map((group) => (
+                                                    <span key={group.id} className="px-2 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium">
+                                                        {group.name}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Link href={`/students/${student.id}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors">
+                                                Szczegóły
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
             )}
         </div>
     );

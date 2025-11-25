@@ -12,6 +12,7 @@ interface AddGroupModalProps {
 export default function AddGroupModal({ isOpen, onClose, onSuccess }: AddGroupModalProps) {
     const [name, setName] = useState('');
     const [ratePerClass, setRatePerClass] = useState('');
+    const [monthlyFee, setMonthlyFee] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +25,8 @@ export default function AddGroupModal({ isOpen, onClose, onSuccess }: AddGroupMo
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name,
-                    ratePerClass: parseFloat(ratePerClass) || 0
+                    ratePerClass: parseFloat(ratePerClass) || 0,
+                    monthlyFee: parseFloat(monthlyFee) || 0
                 }),
             });
 
@@ -32,6 +34,7 @@ export default function AddGroupModal({ isOpen, onClose, onSuccess }: AddGroupMo
 
             setName('');
             setRatePerClass('');
+            setMonthlyFee('');
             onSuccess?.();
             onClose();
         } catch (err) {
@@ -68,6 +71,20 @@ export default function AddGroupModal({ isOpen, onClose, onSuccess }: AddGroupMo
                         min="0"
                         step="0.01"
                     />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Opłata Miesięczna (PLN)</label>
+                    <input
+                        type="number"
+                        value={monthlyFee}
+                        onChange={e => setMonthlyFee(e.target.value)}
+                        className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="np. 150 (0 = brak)"
+                        min="0"
+                        step="0.01"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Używane do automatycznego rozliczania wpłat.</p>
                 </div>
 
                 <div className="flex gap-3 pt-4">

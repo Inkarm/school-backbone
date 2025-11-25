@@ -8,13 +8,16 @@ export async function PUT(
     try {
         const { id } = await params;
         const body = await request.json();
-        const { trainerId, roomId, status, description } = body;
+        const { trainerId, roomId, status, description, date, startTime, endTime } = body;
 
         const updateData: any = {};
         if (trainerId) updateData.trainerId = trainerId;
         if (roomId !== undefined) updateData.roomId = roomId; // Allow null
         if (status) updateData.status = status;
         if (description !== undefined) updateData.description = description;
+        if (date) updateData.date = date;
+        if (startTime) updateData.startTime = startTime;
+        if (endTime) updateData.endTime = endTime;
 
         const event = await prisma.scheduleEvent.update({
             where: { id: parseInt(id) },

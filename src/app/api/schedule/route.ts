@@ -1,14 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { updatePastEventsStatus } from '@/lib/scheduleService';
 
 export async function GET(request: NextRequest) {
     try {
+        // Auto-update statuses before fetching
+        await updatePastEventsStatus();
+
         const searchParams = request.nextUrl.searchParams;
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
 
+        const groupId = searchParams.get('groupId');
+
         // Build the where clause conditionally
         const whereClause: any = {};
+
+        if (groupId) {
+            whereClause.groupId = parseInt(groupId);
+        }
 
         if (startDate && endDate) {
             whereClause.date = {
