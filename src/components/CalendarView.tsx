@@ -2,32 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import EventDetailsModal from '@/components/EventDetailsModal';
+import { ScheduleEvent } from '@/types';
 
 const DAYS = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 8); // 8:00 - 21:00
-
-interface ScheduleEvent {
-    id: number;
-    date: string;
-    startTime: string;
-    endTime: string;
-    status: string;
-    description: string | null;
-    room: {
-        id: number;
-        name: string;
-    } | null;
-    group: {
-        id: number;
-        name: string;
-    };
-    trainer: {
-        id: number;
-        login: string;
-        firstName: string | null;
-        lastName: string | null;
-    };
-}
 
 interface CalendarViewProps {
     refreshTrigger?: number;
@@ -153,7 +131,7 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
             'bg-purple-50 border-purple-200 text-purple-700',
             'bg-teal-50 border-teal-200 text-teal-700',
         ];
-        return colors[event.group.id % colors.length];
+        return colors[(event.group?.id || 0) % colors.length];
     };
 
     if (loading) {
@@ -246,9 +224,9 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
                                             left: pos.left,
                                         }}
                                     >
-                                        <div className="font-bold truncate">{event.group.name}</div>
+                                        <div className="font-bold truncate">{event.group?.name || 'Brak grupy'}</div>
                                         <div className="opacity-80 truncate">
-                                            {event.trainer.firstName ? `${event.trainer.firstName} ${event.trainer.lastName}` : event.trainer.login}
+                                            {event.trainer ? (event.trainer.firstName ? `${event.trainer.firstName} ${event.trainer.lastName}` : event.trainer.login) : 'Brak trenera'}
                                         </div>
                                         {event.room && <div className="text-[10px] opacity-60 truncate">{event.room.name}</div>}
                                         {event.status === 'CANCELLED' && (
@@ -265,7 +243,7 @@ export default function CalendarView({ refreshTrigger = 0 }: CalendarViewProps) 
             <EventDetailsModal
                 isOpen={!!selectedEvent}
                 onClose={() => setSelectedEvent(null)}
-                onSuccess={fetchEvents}
+                onDelete={fetchEvents}
                 event={selectedEvent}
             />
         </div>

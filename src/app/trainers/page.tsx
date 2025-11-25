@@ -3,23 +3,13 @@
 import { useState, useEffect } from 'react';
 import AddTrainerModal from '@/components/AddTrainerModal';
 import EditTrainerModal from '@/components/EditTrainerModal';
-
-interface Trainer {
-    id: number;
-    login: string;
-    role: string;
-    firstName: string | null;
-    lastName: string | null;
-    email: string | null;
-    phone: string | null;
-    color: string | null;
-}
+import { User } from '@/types';
 
 export default function TrainersPage() {
-    const [trainers, setTrainers] = useState<Trainer[]>([]);
+    const [trainers, setTrainers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [editingTrainer, setEditingTrainer] = useState<Trainer | null>(null);
+    const [editingTrainer, setEditingTrainer] = useState<User | null>(null);
 
     useEffect(() => {
         fetchTrainers();

@@ -4,12 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AddGroupModal from '@/components/AddGroupModal';
 import EditGroupModal from '@/components/EditGroupModal';
-
-interface Group {
-    id: number;
-    name: string;
-    students: any[];
-}
+import { Group } from '@/types';
 
 export default function GroupsPage() {
     const [groups, setGroups] = useState<Group[]>([]);
@@ -70,7 +65,7 @@ export default function GroupsPage() {
                         <div key={group.id} className="clean-card p-6 hover:shadow-md transition-shadow">
                             <h3 className="text-xl font-bold text-slate-900 mb-2">{group.name}</h3>
                             <p className="text-slate-500 text-sm mb-4">
-                                {group.students.length} uczniów
+                                {group.students?.length || 0} uczniów
                             </p>
                             <div className="flex gap-2">
                                 <button

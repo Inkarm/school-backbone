@@ -4,27 +4,7 @@ import { useState, useEffect, use } from 'react';
 import EditStudentModal from '@/components/EditStudentModal';
 import AssignGroupModal from '@/components/AssignGroupModal';
 import AddPaymentModal from '@/components/AddPaymentModal';
-
-interface Student {
-    id: number;
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string | null;
-    healthNotes: string | null;
-    parentName: string;
-    parentPhone: string;
-    parentEmail: string;
-    groups: Array<{
-        id: number;
-        name: string;
-    }>;
-    payments: Array<{
-        id: number;
-        amount: number;
-        paymentDate: string;
-        method: string;
-    }>;
-}
+import { Student } from '@/types';
 
 export default function StudentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -77,7 +57,7 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ id: s
 
     // Check payment status (paid in current month)
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-    const lastPayment = student.payments[0];
+    const lastPayment = student.payments?.[0];
     const isPaid = lastPayment && new Date(lastPayment.paymentDate).toISOString().slice(0, 7) === currentMonth;
 
     return (
@@ -176,7 +156,7 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ id: s
                         </button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {student.groups.length === 0 ? (
+                        {!student.groups || student.groups.length === 0 ? (
                             <p className="text-slate-500 col-span-3">Uczeń nie jest przypisany do żadnej grupy</p>
                         ) : (
                             student.groups.map((group) => (
@@ -207,7 +187,6 @@ export default function StudentDetailsPage({ params }: { params: Promise<{ id: s
                     setIsAssignGroupModalOpen(false);
                 }}
                 studentId={student.id}
-                currentGroupIds={student.groups.map(g => g.id)}
             />
 
             <AddPaymentModal

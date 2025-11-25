@@ -3,16 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import AssignStudentModal from '@/components/AssignStudentModal';
-
-interface Group {
-    id: number;
-    name: string;
-    students: Array<{
-        id: number;
-        firstName: string;
-        lastName: string;
-    }>;
-}
+import { Group } from '@/types';
 
 export default function GroupDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -51,7 +42,7 @@ export default function GroupDetailsPage({ params }: { params: Promise<{ id: str
 
             <div className="clean-card p-6">
                 <div className="flex justify-between items-center border-b border-gray-100 pb-4 mb-4">
-                    <h3 className="text-lg font-semibold text-slate-900">Lista Uczniów ({group.students.length})</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">Lista Uczniów ({group.students?.length || 0})</h3>
                     <button
                         className="btn-primary text-sm"
                         onClick={() => setIsAssignStudentModalOpen(true)}
@@ -60,7 +51,7 @@ export default function GroupDetailsPage({ params }: { params: Promise<{ id: str
                     </button>
                 </div>
 
-                {group.students.length === 0 ? (
+                {!group.students || group.students.length === 0 ? (
                     <p className="text-slate-500">Brak uczniów w tej grupie.</p>
                 ) : (
                     <ul className="space-y-2">
@@ -84,7 +75,6 @@ export default function GroupDetailsPage({ params }: { params: Promise<{ id: str
                     setIsAssignStudentModalOpen(false);
                 }}
                 groupId={group.id}
-                currentStudentIds={group.students.map(s => s.id)}
             />
         </div>
     );
