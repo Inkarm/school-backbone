@@ -26,13 +26,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
                 if (parsedCredentials.success) {
                     const { login, password } = parsedCredentials.data;
+                    console.log(`[AUTH] Attempting login for user: ${login}`);
+
                     const user = await getUser(login);
-                    if (!user) return null;
+                    if (!user) {
+                        console.log('[AUTH] User not found in database');
+                        return null;
+                    }
+                    console.log(`[AUTH] User found: ${user.login} (ID: ${user.id})`);
 
                     const passwordsMatch = await bcrypt.compare(password, user.password);
+                    console.log(`[AUTH] Password match result: ${passwordsMatch}`);
+
                     if (passwordsMatch) return { ...user, id: user.id.toString() };
                 }
 
+                console.log('[AUTH] Authorization failed');
                 return null;
             },
         }),
