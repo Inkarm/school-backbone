@@ -2,24 +2,31 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
 async function main() {
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash('password123', 10);
+
     // 1. Create Users
     const admin = await prisma.user.upsert({
         where: { login: 'admin' },
-        update: {},
+        update: {
+            password: hashedPassword, // Ensure password is updated if user exists
+        },
         create: {
             login: 'admin',
-            password: 'password123', // In real app, hash this!
-            role: 'admin',
+            password: hashedPassword,
+            role: 'ADMIN', // Uppercase to match Enum
         },
     })
 
     const trainer = await prisma.user.upsert({
         where: { login: 'anna' },
-        update: {},
+        update: {
+            password: hashedPassword,
+        },
         create: {
             login: 'anna',
-            password: 'password123',
-            role: 'trainer',
+            password: hashedPassword,
+            role: 'TRAINER', // Uppercase to match Enum
         },
     })
 
