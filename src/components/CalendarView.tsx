@@ -338,7 +338,13 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                         {/* Rooms Columns */}
                         <div className="flex" style={{ width: `${Math.max(100, rooms.length * 25)}%` }}>
                             {rooms.map((room) => {
-                                const roomEvents = events.filter(e => e.roomId === room.id);
+                                const roomEvents = events.filter(e => {
+                                    const eDate = new Date(e.date);
+                                    return e.roomId === room.id &&
+                                        eDate.getDate() === currentWeek.getDate() &&
+                                        eDate.getMonth() === currentWeek.getMonth() &&
+                                        eDate.getFullYear() === currentWeek.getFullYear();
+                                });
                                 const layoutMap = calculateEventLayout(roomEvents);
 
                                 return (
@@ -391,8 +397,23 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                         <div key={hour} className="h-16 border-b border-gray-50" />
                                     ))}
                                 </div>
-                                {events.filter(e => !e.roomId).map(event => {
-                                    const layoutMap = calculateEventLayout(events.filter(e => !e.roomId));
+                                {events.filter(e => {
+                                    const eDate = new Date(e.date);
+                                    return !e.roomId &&
+                                        eDate.getDate() === currentWeek.getDate() &&
+                                        eDate.getMonth() === currentWeek.getMonth() &&
+                                        eDate.getFullYear() === currentWeek.getFullYear();
+                                }).map(event => {
+                                    const layoutMap = calculateEventLayout(events.filter(e => !e.roomId)); // Recalculate layout for filtered events? No, need to pass filtered list.
+                                    // Actually, let's fix the layout calculation too.
+                                    const noRoomEvents = events.filter(e => {
+                                        const eDate = new Date(e.date);
+                                        return !e.roomId &&
+                                            eDate.getDate() === currentWeek.getDate() &&
+                                            eDate.getMonth() === currentWeek.getMonth() &&
+                                            eDate.getFullYear() === currentWeek.getFullYear();
+                                    });
+                                    const layoutMap = calculateEventLayout(noRoomEvents);
                                     const layout = layoutMap.get(event.id) || { width: '90%', left: '5%' };
                                     const pos = getEventPosition(event, layout);
                                     return (
