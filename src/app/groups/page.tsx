@@ -5,6 +5,7 @@ import Link from 'next/link';
 import AddGroupModal from '@/components/AddGroupModal';
 import EditGroupModal from '@/components/EditGroupModal';
 import PageHeader from '@/components/ui/PageHeader';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { Group } from '@/types';
 
 export default function GroupsPage() {
@@ -14,6 +15,13 @@ export default function GroupsPage() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        id: number | null;
+        title: string;
+        message: string;
+    }>({ isOpen: false, id: null, title: '', message: '' });
 
     useEffect(() => {
         fetchGroups();
@@ -33,13 +41,23 @@ export default function GroupsPage() {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Czy na pewno chcesz usunąć tę grupę?')) return;
+    const handleDeleteClick = (id: number) => {
+        setConfirmModal({
+            isOpen: true,
+            id,
+            title: 'Usuń grupę',
+            message: 'Czy na pewno chcesz usunąć tę grupę? Ta operacja jest nieodwracalna.'
+        });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmModal.id) return;
 
         try {
-            const res = await fetch(`/api/groups/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/groups/${confirmModal.id}`, { method: 'DELETE' });
             if (res.ok) {
                 fetchGroups();
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
             } else {
                 const data = await res.json();
                 alert(`Błąd: ${data.error}`);
@@ -78,7 +96,7 @@ export default function GroupsPage() {
                     {groups.map(group => (
                         <div key={group.id} className="clean-card p-6 hover:shadow-md transition-shadow group relative">
                             <button
-                                onClick={() => handleDelete(group.id)}
+                                onClick={() => handleDeleteClick(group.id)}
                                 className="absolute top-4 right-4 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
                                 title="Usuń grupę"
                             >
@@ -118,6 +136,16 @@ export default function GroupsPage() {
                 onClose={() => setIsEditModalOpen(false)}
                 onSuccess={() => setRefreshTrigger(prev => prev + 1)}
                 group={selectedGroup}
+            />
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={handleConfirmDelete}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                variant="danger"
+                confirmText="Usuń"
             />
         </div>
     );

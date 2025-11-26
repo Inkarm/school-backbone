@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AddRoomModal from '@/components/AddRoomModal';
 import EditRoomModal from '@/components/EditRoomModal';
 import PageHeader from '@/components/ui/PageHeader';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface Room {
     id: number;
@@ -16,6 +17,13 @@ export default function RoomsPage() {
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        id: number | null;
+        title: string;
+        message: string;
+    }>({ isOpen: false, id: null, title: '', message: '' });
 
     useEffect(() => {
         fetchRooms();
@@ -30,13 +38,23 @@ export default function RoomsPage() {
         finally { setLoading(false); }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Czy na pewno chcesz usunąć tę salę?')) return;
+    const handleDeleteClick = (id: number) => {
+        setConfirmModal({
+            isOpen: true,
+            id,
+            title: 'Usuń salę',
+            message: 'Czy na pewno chcesz usunąć tę salę? Ta operacja jest nieodwracalna.'
+        });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmModal.id) return;
 
         try {
-            const res = await fetch(`/api/rooms/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/rooms/${confirmModal.id}`, { method: 'DELETE' });
             if (res.ok) {
                 fetchRooms();
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
             } else {
                 const data = await res.json();
                 alert(`Błąd: ${data.error}`);
@@ -93,7 +111,7 @@ export default function RoomsPage() {
                                     Edytuj
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(room.id)}
+                                    onClick={() => handleDeleteClick(room.id)}
                                     className="flex-1 text-sm text-slate-600 hover:text-red-600 font-medium py-2"
                                 >
                                     Usuń
@@ -115,6 +133,16 @@ export default function RoomsPage() {
                 onClose={() => setEditingRoom(null)}
                 onSuccess={fetchRooms}
                 room={editingRoom}
+            />
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={handleConfirmDelete}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                variant="danger"
+                confirmText="Usuń"
             />
         </div>
     );

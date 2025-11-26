@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AddTrainerModal from '@/components/AddTrainerModal';
 import EditTrainerModal from '@/components/EditTrainerModal';
 import PageHeader from '@/components/ui/PageHeader';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { User } from '@/types';
 
 export default function TrainersPage() {
@@ -11,6 +12,13 @@ export default function TrainersPage() {
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingTrainer, setEditingTrainer] = useState<User | null>(null);
+
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        id: number | null;
+        title: string;
+        message: string;
+    }>({ isOpen: false, id: null, title: '', message: '' });
 
     useEffect(() => {
         fetchTrainers();
@@ -24,13 +32,23 @@ export default function TrainersPage() {
         finally { setLoading(false); }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Czy na pewno chcesz usunąć tego trenera?')) return;
+    const handleDeleteClick = (id: number) => {
+        setConfirmModal({
+            isOpen: true,
+            id,
+            title: 'Usuń trenera',
+            message: 'Czy na pewno chcesz usunąć tego trenera? Ta operacja jest nieodwracalna.'
+        });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!confirmModal.id) return;
 
         try {
-            const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/users/${confirmModal.id}`, { method: 'DELETE' });
             if (res.ok) {
                 fetchTrainers();
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
             } else {
                 const data = await res.json();
                 alert(data.error || 'Nie udało się usunąć trenera');
@@ -65,7 +83,7 @@ export default function TrainersPage() {
                                     ✎
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(trainer.id)}
+                                    onClick={() => handleDeleteClick(trainer.id)}
                                     className="p-1 text-slate-400 hover:text-red-600"
                                     title="Usuń"
                                 >
@@ -116,6 +134,16 @@ export default function TrainersPage() {
                 onClose={() => setEditingTrainer(null)}
                 onSuccess={fetchTrainers}
                 trainer={editingTrainer}
+            />
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={handleConfirmDelete}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                variant="danger"
+                confirmText="Usuń"
             />
         </div>
     );
