@@ -263,6 +263,12 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                         {monthName} {year}
                     </span>
                 </div>
+
+                <div className="hidden md:block">
+                    <a href="/schedule/recurring" className="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                        <span>🔄</span> Zarządzaj seriami
+                    </a>
+                </div>
             </div>
 
             {/* Calendar Content */}

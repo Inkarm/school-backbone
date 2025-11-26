@@ -26,6 +26,8 @@ export default function AddClassModal({ isOpen, onClose, onSuccess, selectedDate
         trainerId: '',
         roomId: '',
         description: '',
+        isRecurring: false,
+        recurrenceEndDate: '',
     });
 
     useEffect(() => {
@@ -89,6 +91,8 @@ export default function AddClassModal({ isOpen, onClose, onSuccess, selectedDate
                 trainerId: '',
                 roomId: '',
                 description: '',
+                isRecurring: false,
+                recurrenceEndDate: '',
             }));
         } catch (err: any) {
             console.error(err);
@@ -195,12 +199,44 @@ export default function AddClassModal({ isOpen, onClose, onSuccess, selectedDate
                     />
                 </div>
 
+                <div className="pt-2 border-t border-gray-100">
+                    <div className="flex items-center gap-2 mb-4">
+                        <input
+                            type="checkbox"
+                            id="recurring"
+                            checked={formData.isRecurring}
+                            onChange={e => setFormData({ ...formData, isRecurring: e.target.checked })}
+                            className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                        />
+                        <label htmlFor="recurring" className="text-sm font-medium text-slate-700">
+                            Powtarzaj co tydzień
+                        </label>
+                    </div>
+
+                    {formData.isRecurring && (
+                        <div className="mb-4 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                            <label className="block text-sm font-medium text-indigo-900 mb-1">Data końcowa cyklu</label>
+                            <input
+                                type="date"
+                                value={formData.recurrenceEndDate}
+                                onChange={e => setFormData({ ...formData, recurrenceEndDate: e.target.value })}
+                                className="w-full p-2 border border-indigo-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                required={formData.isRecurring}
+                                min={formData.date}
+                            />
+                            <p className="text-xs text-indigo-600 mt-1">
+                                Zajęcia będą dodawane co tydzień w wybranym dniu i godzinie, aż do tej daty.
+                            </p>
+                        </div>
+                    )}
+                </div>
+
                 <div className="flex gap-3 pt-4">
                     <button type="button" onClick={onClose} className="btn-secondary flex-1" disabled={loading}>
                         Anuluj
                     </button>
                     <button type="submit" className="btn-primary flex-1" disabled={loading}>
-                        {loading ? 'Dodawanie...' : 'Dodaj Zajęcia'}
+                        {loading ? 'Dodawanie...' : (formData.isRecurring ? 'Utwórz cykl zajęć' : 'Dodaj Zajęcia')}
                     </button>
                 </div>
             </form>

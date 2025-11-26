@@ -72,60 +72,114 @@ export async function POST(request: NextRequest) {
 
     try {
         const body = await request.json();
-        const { date, startTime, endTime, groupId, trainerId, roomId } = body;
+        const { date, startTime, endTime, groupId, trainerId, roomId, description, isRecurring, recurrenceEndDate } = body;
 
-        // Check for conflicts if room is specified
-        if (roomId) {
+        const parsedDate = new Date(date);
+        const parsedGroupId = parseInt(groupId);
+        const parsedTrainerId = parseInt(trainerId);
+        const parsedRoomId = roomId ? parseInt(roomId) : null;
+
+        // Helper to check conflicts
+        const checkConflict = async (checkDate: Date) => {
+            if (!parsedRoomId) return false;
             const conflict = await prisma.scheduleEvent.findFirst({
                 where: {
-                    roomId: parseInt(roomId),
-                    date: new Date(date),
-                    status: { not: 'CANCELLED' }, // Ignore cancelled events
+                    roomId: parsedRoomId,
+                    date: checkDate,
+                    status: { not: 'CANCELLED' },
                     OR: [
-                        {
-                            // New starts during existing
-                            startTime: { lte: startTime },
-                            endTime: { gt: startTime }
-                        },
-                        {
-                            // New ends during existing
-                            startTime: { lt: endTime },
-                            endTime: { gte: endTime }
-                        },
-                        {
-                            // New encloses existing
-                            startTime: { gte: startTime },
-                            endTime: { lte: endTime }
-                        }
+                        { startTime: { lte: startTime }, endTime: { gt: startTime } },
+                        { startTime: { lt: endTime }, endTime: { gte: endTime } },
+                        { startTime: { gte: startTime }, endTime: { lte: endTime } }
                     ]
                 }
             });
+            return !!conflict;
+        };
 
-            if (conflict) {
+        if (isRecurring && recurrenceEndDate) {
+            const endDate = new Date(recurrenceEndDate);
+            const dates: Date[] = [];
+            let currentDate = new Date(parsedDate);
+
+            // Generate dates
+            while (currentDate <= endDate) {
+                dates.push(new Date(currentDate));
+                currentDate.setDate(currentDate.getDate() + 7);
+            }
+
+            // Check conflicts for ALL dates
+            for (const d of dates) {
+                if (await checkConflict(d)) {
+                    return NextResponse.json(
+                        { error: `Konflikt sali w dniu ${d.toLocaleDateString()}!` },
+                        { status: 409 }
+                    );
+                }
+            }
+
+            // Create Series and Events in transaction
+            const result = await prisma.$transaction(async (tx) => {
+                const series = await tx.recurringSchedule.create({
+                    data: {
+                        startDate: parsedDate,
+                        endDate: endDate,
+                        dayOfWeek: parsedDate.getDay(),
+                        startTime,
+                        endTime,
+                        groupId: parsedGroupId,
+                        trainerId: parsedTrainerId,
+                        roomId: parsedRoomId,
+                        description
+                    }
+                });
+
+                await tx.scheduleEvent.createMany({
+                    data: dates.map(d => ({
+                        date: d,
+                        startTime,
+                        endTime,
+                        groupId: parsedGroupId,
+                        trainerId: parsedTrainerId,
+                        roomId: parsedRoomId,
+                        description,
+                        seriesId: series.id
+                    }))
+                });
+
+                return series;
+            });
+
+            return NextResponse.json({ message: 'Series created', seriesId: result.id }, { status: 201 });
+
+        } else {
+            // Single Event
+            if (await checkConflict(parsedDate)) {
                 return NextResponse.json(
                     { error: 'Sala jest zajęta w tym terminie!' },
                     { status: 409 }
                 );
             }
+
+            const event = await prisma.scheduleEvent.create({
+                data: {
+                    date: parsedDate,
+                    startTime,
+                    endTime,
+                    groupId: parsedGroupId,
+                    trainerId: parsedTrainerId,
+                    roomId: parsedRoomId,
+                    description,
+                },
+                include: {
+                    group: true,
+                    trainer: true,
+                    room: true,
+                },
+            });
+
+            return NextResponse.json(event, { status: 201 });
         }
-
-        const event = await prisma.scheduleEvent.create({
-            data: {
-                date: new Date(date),
-                startTime,
-                endTime,
-                groupId: parseInt(groupId),
-                trainerId: parseInt(trainerId),
-                roomId: roomId ? parseInt(roomId) : null,
-            },
-            include: {
-                group: true,
-                trainer: true,
-                room: true,
-            },
-        });
-
-        return NextResponse.json(event, { status: 201 });
     } catch (error) {
         console.error('Error creating schedule event:', error);
         return NextResponse.json(
