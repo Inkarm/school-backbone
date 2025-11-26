@@ -1,11 +1,20 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { authenticate } from '@/app/lib/actions';
 
 export default function LoginPage() {
-    const [errorMessage, dispatch] = useActionState(authenticate, undefined);
+    // @ts-ignore - state type mismatch with server action
+    const [state, dispatch] = useActionState(authenticate, undefined);
+
+    useEffect(() => {
+        if (state && typeof state === 'object' && 'success' in state && state.success) {
+            window.location.href = '/';
+        }
+    }, [state]);
+
+    const errorMessage = state && typeof state === 'string' ? state : null;
 
     return (
         <main className="flex items-center justify-center md:h-screen bg-slate-50">
