@@ -199,6 +199,32 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                         </button>
+
+                        {/* Date Picker */}
+                        <div className="relative">
+                            <input
+                                type="date"
+                                value={currentWeek.toISOString().split('T')[0]}
+                                onChange={(e) => {
+                                    if (e.target.value) {
+                                        const newDate = new Date(e.target.value);
+                                        setCurrentWeek(newDate);
+                                        setMobileDayIndex(newDate.getDay() === 0 ? 6 : newDate.getDay() - 1);
+                                    }
+                                }}
+                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                            />
+                            <div className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer transition-colors">
+                                <span className="font-semibold text-slate-900 capitalize hidden md:inline-block">
+                                    {(viewMode === 'day' || viewMode === 'rooms')
+                                        ? currentWeek.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })
+                                        : `${monthName} ${year}`
+                                    }
+                                </span>
+                                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            </div>
+                        </div>
+
                         <button
                             onClick={() => navigate('next')}
                             className="p-1 rounded-full hover:bg-gray-100 text-slate-500 hover:text-slate-900 transition-colors"
@@ -206,10 +232,6 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                         </button>
                     </div>
-
-                    <span className="font-semibold text-slate-900 capitalize hidden md:inline-block">
-                        {monthName} {year}
-                    </span>
                 </div>
 
                 {/* View Switcher */}
@@ -397,15 +419,7 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                         <div key={hour} className="h-16 border-b border-gray-50" />
                                     ))}
                                 </div>
-                                {events.filter(e => {
-                                    const eDate = new Date(e.date);
-                                    return !e.roomId &&
-                                        eDate.getDate() === currentWeek.getDate() &&
-                                        eDate.getMonth() === currentWeek.getMonth() &&
-                                        eDate.getFullYear() === currentWeek.getFullYear();
-                                }).map(event => {
-                                    const layoutMap = calculateEventLayout(events.filter(e => !e.roomId)); // Recalculate layout for filtered events? No, need to pass filtered list.
-                                    // Actually, let's fix the layout calculation too.
+                                {(() => {
                                     const noRoomEvents = events.filter(e => {
                                         const eDate = new Date(e.date);
                                         return !e.roomId &&
@@ -414,28 +428,31 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                             eDate.getFullYear() === currentWeek.getFullYear();
                                     });
                                     const layoutMap = calculateEventLayout(noRoomEvents);
-                                    const layout = layoutMap.get(event.id) || { width: '90%', left: '5%' };
-                                    const pos = getEventPosition(event, layout);
-                                    return (
-                                        <div
-                                            key={event.id}
-                                            onClick={() => setSelectedEvent(event)}
-                                            className={`absolute rounded-lg p-2 text-xs cursor-pointer shadow-sm hover:shadow-md transition-all border ${getEventColor(event)} z-10 hover:z-20 group overflow-hidden`}
-                                            style={{
-                                                top: pos.top,
-                                                height: pos.height,
-                                                width: pos.width,
-                                                left: pos.left,
-                                            }}
-                                        >
-                                            <div className="font-bold truncate text-sm mb-0.5">{event.group?.name}</div>
-                                            <div className="flex items-center gap-1 opacity-90 truncate text-[11px]">
-                                                <span>👤</span>
-                                                {event.trainer ? (event.trainer.firstName ? `${event.trainer.firstName} ${event.trainer.lastName}` : event.trainer.login) : 'Brak trenera'}
+
+                                    return noRoomEvents.map(event => {
+                                        const layout = layoutMap.get(event.id) || { width: '90%', left: '5%' };
+                                        const pos = getEventPosition(event, layout);
+                                        return (
+                                            <div
+                                                key={event.id}
+                                                onClick={() => setSelectedEvent(event)}
+                                                className={`absolute rounded-lg p-2 text-xs cursor-pointer shadow-sm hover:shadow-md transition-all border ${getEventColor(event)} z-10 hover:z-20 group overflow-hidden`}
+                                                style={{
+                                                    top: pos.top,
+                                                    height: pos.height,
+                                                    width: pos.width,
+                                                    left: pos.left,
+                                                }}
+                                            >
+                                                <div className="font-bold truncate text-sm mb-0.5">{event.group?.name}</div>
+                                                <div className="flex items-center gap-1 opacity-90 truncate text-[11px]">
+                                                    <span>👤</span>
+                                                    {event.trainer ? (event.trainer.firstName ? `${event.trainer.firstName} ${event.trainer.lastName}` : event.trainer.login) : 'Brak trenera'}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    });
+                                })()}
                             </div>
                         </div>
                     </div>
