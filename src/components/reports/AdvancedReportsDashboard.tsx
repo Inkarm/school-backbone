@@ -5,6 +5,9 @@ import RevenueChart from './RevenueChart';
 import PaymentMethodPieChart from './PaymentMethodPieChart';
 import StudentGrowthChart from './StudentGrowthChart';
 import RoomUtilizationChart from './RoomUtilizationChart';
+import TrainerPerformanceChart from './TrainerPerformanceChart';
+import OverduePaymentsList from './OverduePaymentsList';
+import DataExportButton from './DataExportButton';
 
 export default function AdvancedReportsDashboard() {
     const [revenueData, setRevenueData] = useState([]);
@@ -12,17 +15,26 @@ export default function AdvancedReportsDashboard() {
     const [groupRevenueData, setGroupRevenueData] = useState([]);
     const [studentGrowthData, setStudentGrowthData] = useState([]);
     const [roomUtilizationData, setRoomUtilizationData] = useState([]);
+    const [trainerStatsData, setTrainerStatsData] = useState([]);
+    const [overdueData, setOverdueData] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchAllData = async () => {
             try {
-                const [revenueRes, methodsRes, groupRes, growthRes, roomRes] = await Promise.all([
+                // Calculate date range for trainer stats (last 30 days)
+                const end = new Date();
+                const start = new Date();
+                start.setDate(start.getDate() - 30);
+
+                const [revenueRes, methodsRes, groupRes, growthRes, roomRes, trainerRes, overdueRes] = await Promise.all([
                     fetch('/api/reports/financial/revenue'),
                     fetch('/api/reports/financial/payment-methods'),
                     fetch('/api/reports/financial/by-group'),
                     fetch('/api/reports/students/growth'),
-                    fetch('/api/reports/operations/room-utilization')
+                    fetch('/api/reports/operations/room-utilization'),
+                    fetch(`/api/reports/trainer-stats?startDate=${start.toISOString()}&endDate=${end.toISOString()}`),
+                    fetch('/api/reports/financial/overdue')
                 ]);
 
                 if (revenueRes.ok) setRevenueData(await revenueRes.json());
@@ -30,6 +42,8 @@ export default function AdvancedReportsDashboard() {
                 if (groupRes.ok) setGroupRevenueData(await groupRes.json());
                 if (growthRes.ok) setStudentGrowthData(await growthRes.json());
                 if (roomRes.ok) setRoomUtilizationData(await roomRes.json());
+                if (trainerRes.ok) setTrainerStatsData(await trainerRes.json());
+                if (overdueRes.ok) setOverdueData(await overdueRes.json());
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
             } finally {
@@ -50,35 +64,68 @@ export default function AdvancedReportsDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue Chart */}
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-900 mb-4">Przychody (Ostatnie 12 m-cy)</h3>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-slate-900">Przychody (Ostatnie 12 m-cy)</h3>
+                        <DataExportButton data={revenueData} filename="przychody_roczne" label="CSV" />
+                    </div>
                     <RevenueChart data={revenueData} />
                 </div>
 
                 {/* Payment Methods */}
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-900 mb-4">Metody Płatności</h3>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-slate-900">Metody Płatności</h3>
+                        <DataExportButton data={paymentMethodData} filename="metody_platnosci" label="CSV" />
+                    </div>
                     <PaymentMethodPieChart data={paymentMethodData} />
                 </div>
+            </div>
+
+            {/* Overdue Payments */}
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-slate-900">Zaległe Płatności (Bieżący miesiąc)</h3>
+                    <DataExportButton data={overdueData} filename="zalegle_platnosci" label="Eksportuj listę" />
+                </div>
+                <OverduePaymentsList data={overdueData} />
+            </div>
+
+            {/* Trainer Performance */}
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-slate-900">Efektywność Trenerów (Ostatnie 30 dni)</h3>
+                    <DataExportButton data={trainerStatsData} filename="efektywnosc_trenerow" label="CSV" />
+                </div>
+                <TrainerPerformanceChart data={trainerStatsData} />
             </div>
 
             {/* Operational & Growth */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Student Growth Chart */}
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-900 mb-4">Wzrost Liczby Uczniów</h3>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-slate-900">Wzrost Liczby Uczniów</h3>
+                        <DataExportButton data={studentGrowthData} filename="wzrost_uczniow" label="CSV" />
+                    </div>
                     <StudentGrowthChart data={studentGrowthData} />
                 </div>
 
                 {/* Room Utilization Chart */}
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-900 mb-4">Wykorzystanie Sal (Godziny)</h3>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-slate-900">Wykorzystanie Sal (Godziny)</h3>
+                        <DataExportButton data={roomUtilizationData} filename="wykorzystanie_sal" label="CSV" />
+                    </div>
                     <RoomUtilizationChart data={roomUtilizationData} />
                 </div>
             </div>
 
             {/* Revenue by Group Table */}
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h3 className="text-lg font-bold text-slate-900 mb-4">Przychody wg Grup</h3>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-slate-900">Przychody wg Grup</h3>
+                    <DataExportButton data={groupRevenueData} filename="przychody_grupy" label="CSV" />
+                </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="text-xs text-slate-500 uppercase bg-slate-50">
