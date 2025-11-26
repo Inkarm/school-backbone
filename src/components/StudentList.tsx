@@ -9,6 +9,7 @@ interface Student {
     lastName: string;
     parentName: string;
     parentPhone: string;
+    status: string;
     groups: Array<{
         id: number;
         name: string;
@@ -24,6 +25,7 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [showArchived, setShowArchived] = useState(false);
 
     useEffect(() => {
         fetchStudents();
@@ -50,6 +52,41 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
         }
     };
 
+    const handleSuspend = async (id: number, currentStatus: string) => {
+        const newStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+        const confirmMsg = currentStatus === 'ACTIVE'
+            ? 'Czy na pewno chcesz zawiesić tego ucznia? Trafi on do archiwum.'
+            : 'Czy na pewno chcesz przywrócić tego ucznia?';
+
+        if (!confirm(confirmMsg)) return;
+
+        try {
+            const res = await fetch(`/api/students/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus }),
+            });
+
+            if (res.ok) fetchStudents();
+            else alert('Błąd podczas zmiany statusu');
+        } catch (e) { console.error(e); }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Czy na pewno chcesz trwale usunąć tego ucznia? Tej operacji nie można cofnąć.')) return;
+
+        try {
+            const res = await fetch(`/api/students/${id}`, { method: 'DELETE' });
+            if (res.ok) fetchStudents();
+            else alert('Błąd podczas usuwania');
+        } catch (e) { console.error(e); }
+    };
+
+    const filteredStudents = students.filter(s => {
+        if (showArchived) return s.status === 'SUSPENDED' || s.status === 'ARCHIVED';
+        return s.status === 'ACTIVE' || !s.status; // Default to active if undefined
+    });
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -71,7 +108,7 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
 
     return (
         <div>
-            <div className="mb-6">
+            <div className="mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
                 <input
                     type="text"
                     placeholder="Szukaj ucznia lub rodzica..."
@@ -79,26 +116,45 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setShowArchived(false)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${!showArchived ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+                    >
+                        Aktywni
+                    </button>
+                    <button
+                        onClick={() => setShowArchived(true)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showArchived ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+                    >
+                        Archiwum
+                    </button>
+                </div>
             </div>
 
-            {students.length === 0 ? (
+            {filteredStudents.length === 0 ? (
                 <div className="clean-card p-12 text-center">
-                    <p className="text-slate-500">Brak uczniów do wyświetlenia</p>
+                    <p className="text-slate-500">Brak uczniów w tym widoku</p>
                 </div>
             ) : (
                 <>
                     {/* Mobile Card View */}
                     <div className="grid grid-cols-1 gap-4 md:hidden">
-                        {students.map(student => (
+                        {filteredStudents.map(student => (
                             <div key={student.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-3">
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <h3 className="font-bold text-slate-900">{student.firstName} {student.lastName}</h3>
                                         <p className="text-sm text-slate-500">{student.parentName}</p>
                                     </div>
-                                    <Link href={`/students/${student.id}`} className="text-indigo-600 font-medium text-sm bg-indigo-50 px-3 py-1 rounded-full">
-                                        Szczegóły
-                                    </Link>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleSuspend(student.id, student.status)} className="text-orange-600 text-xs font-medium">
+                                            {student.status === 'ACTIVE' ? 'Zawieś' : 'Przywróć'}
+                                        </button>
+                                        <Link href={`/students/${student.id}`} className="text-indigo-600 font-medium text-sm bg-indigo-50 px-3 py-1 rounded-full">
+                                            Szczegóły
+                                        </Link>
+                                    </div>
                                 </div>
 
                                 <div className="text-sm text-slate-600 flex items-center gap-2">
@@ -132,7 +188,7 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {students.map(student => (
+                                {filteredStudents.map(student => (
                                     <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
                                         <td className="px-4 py-3 font-medium text-slate-900">
                                             {student.firstName} {student.lastName}
@@ -149,9 +205,23 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Link href={`/students/${student.id}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors">
-                                                Szczegóły
-                                            </Link>
+                                            <div className="flex gap-3 items-center">
+                                                <Link href={`/students/${student.id}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors">
+                                                    Szczegóły
+                                                </Link>
+                                                <button
+                                                    onClick={() => handleSuspend(student.id, student.status)}
+                                                    className="text-orange-600 hover:text-orange-800 text-sm font-medium transition-colors"
+                                                >
+                                                    {student.status === 'ACTIVE' ? 'Zawieś' : 'Przywróć'}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(student.id)}
+                                                    className="text-red-600 hover:text-red-800 text-sm font-medium transition-colors opacity-0 group-hover:opacity-100"
+                                                >
+                                                    Usuń
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

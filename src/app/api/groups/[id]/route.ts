@@ -1,58 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { auth } from '@/auth';
 
-export async function GET(
+export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const session = await auth();
+    if (!session || session.user?.role !== 'ADMIN') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const { id } = await params;
         const groupId = parseInt(id);
 
+        // Check if group exists
         const group = await prisma.group.findUnique({
             where: { id: groupId },
-            include: {
-                students: true,
-            },
+            include: { _count: { select: { students: true, scheduleEvents: true } } }
         });
 
         if (!group) {
-            return NextResponse.json(
-                { error: 'Group not found' },
-                { status: 404 }
-            );
+            return NextResponse.json({ error: 'Group not found' }, { status: 404 });
         }
 
-        return NextResponse.json(group);
-    } catch (error) {
-        console.error('Error fetching group:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch group' },
-            { status: 500 }
-        );
-    }
-}
+        // Optional: Prevent deletion if there are associated students or events
+        // For now, we'll allow it but maybe we should warn? 
+        // Let's assume hard delete is what's requested, but Prisma might throw foreign key errors 
+        // if we don't handle relations. 
+        // The schema doesn't have Cascade delete on all relations.
 
-export async function PUT(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    try {
-        const { id } = await params;
-        const groupId = parseInt(id);
-        const body = await request.json();
-        const { name } = body;
-
-        const group = await prisma.group.update({
+        // Let's try to delete. If it fails due to constraints, we'll return an error.
+        await prisma.group.delete({
             where: { id: groupId },
-            data: { name },
         });
 
-        return NextResponse.json(group);
+        return NextResponse.json({ message: 'Group deleted successfully' });
     } catch (error) {
-        console.error('Error updating group:', error);
+        console.error('Error deleting group:', error);
         return NextResponse.json(
-            { error: 'Failed to update group' },
+            { error: 'Failed to delete group. It might have associated data.' },
             { status: 500 }
         );
     }

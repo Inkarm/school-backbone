@@ -48,6 +48,7 @@ model Student {
   parentEmail String?
   healthNotes String?
   notes       String?
+  status      String    @default("ACTIVE") // ACTIVE, SUSPENDED, ARCHIVED
   createdAt   DateTime? @default(now())
   updatedAt   DateTime? @updatedAt
 

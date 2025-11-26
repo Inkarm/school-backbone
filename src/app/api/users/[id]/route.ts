@@ -1,102 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
-
-export async function PUT(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
-    try {
-        const { id } = await params;
-        const body = await request.json();
-        const { firstName, lastName, email, phone, bio, color, password } = body;
-
-        const updateData: any = {
-            firstName,
-            lastName,
-            email,
-            phone,
-            bio,
-            color,
-            accessLevel: body.accessLevel,
-        };
-
-        if (body.accessibleGroups) {
-            updateData.accessibleGroups = {
-                set: body.accessibleGroups.map((id: number) => ({ id }))
-            };
-        }
-
-        // Only update password if provided - hash it first!
-        if (password) {
-            updateData.password = await bcrypt.hash(password, 10);
-        }
-
-        const user = await prisma.user.update({
-            where: { id: parseInt(id) },
-            data: updateData,
-            select: {
-                id: true,
-                login: true,
-                role: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                phone: true,
-                color: true,
-                accessLevel: true,
-                accessibleGroups: true,
-            },
-        });
-
-        return NextResponse.json(user);
-    } catch (error) {
-        console.error('Error updating user:', error);
-        return NextResponse.json(
-            { error: 'Failed to update user' },
-            { status: 500 }
-        );
-    }
-}
+import { auth } from '@/auth';
 
 export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const session = await auth();
+    if (!session || session.user?.role !== 'ADMIN') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const { id } = await params;
+        const userId = parseInt(id);
 
-        // Check if user has related records (groups, events)
-        // If so, we might want to prevent deletion or handle it gracefully
-        // For now, we'll let Prisma throw an error if there are foreign key constraints
-        // or we could check manually.
-
-        // Let's check manually to give a better error message
-        const user = await prisma.user.findUnique({
-            where: { id: parseInt(id) },
-            include: {
-                _count: {
-                    select: { groups: true, scheduleEvents: true }
-                }
-            }
-        });
-
-        if (user && (user._count.groups > 0 || user._count.scheduleEvents > 0)) {
-            return NextResponse.json(
-                { error: 'Cannot delete trainer with assigned groups or schedule events. Reassign them first.' },
-                { status: 400 }
-            );
+        // Prevent deleting yourself
+        if (session.user.id && parseInt(session.user.id) === userId) {
+            return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
         }
 
         await prisma.user.delete({
-            where: { id: parseInt(id) },
+            where: { id: userId },
         });
 
         return NextResponse.json({ message: 'User deleted successfully' });
     } catch (error) {
         console.error('Error deleting user:', error);
         return NextResponse.json(
-            { error: 'Failed to delete user' },
+            { error: 'Failed to delete user. They might be assigned to groups or events.' },
             { status: 500 }
         );
     }

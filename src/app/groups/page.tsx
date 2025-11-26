@@ -32,6 +32,20 @@ export default function GroupsPage() {
         }
     };
 
+    const handleDelete = async (id: number) => {
+        if (!confirm('Czy na pewno chcesz usunąć tę grupę?')) return;
+
+        try {
+            const res = await fetch(`/api/groups/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchGroups();
+            } else {
+                const data = await res.json();
+                alert(`Błąd: ${data.error}`);
+            }
+        } catch (e) { console.error(e); }
+    };
+
     const handleEdit = (group: Group) => {
         setSelectedGroup(group);
         setIsEditModalOpen(true);
@@ -62,7 +76,14 @@ export default function GroupsPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {groups.map(group => (
-                        <div key={group.id} className="clean-card p-6 hover:shadow-md transition-shadow">
+                        <div key={group.id} className="clean-card p-6 hover:shadow-md transition-shadow group relative">
+                            <button
+                                onClick={() => handleDelete(group.id)}
+                                className="absolute top-4 right-4 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Usuń grupę"
+                            >
+                                🗑
+                            </button>
                             <h3 className="text-xl font-bold text-slate-900 mb-2">{group.name}</h3>
                             <p className="text-slate-500 text-sm mb-4">
                                 {group.students?.length || 0} uczniów
