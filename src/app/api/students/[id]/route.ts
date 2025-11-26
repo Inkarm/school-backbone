@@ -2,6 +2,57 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
 
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const session = await auth();
+    if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    try {
+        const { id } = await params;
+        const studentId = parseInt(id);
+
+        const student = await prisma.student.findUnique({
+            where: { id: studentId },
+            include: {
+                groups: true,
+                attendance: {
+                    orderBy: {
+                        event: {
+                            date: 'desc'
+                        }
+                    },
+                    take: 10,
+                    include: {
+                        event: true
+                    }
+                },
+                payments: {
+                    orderBy: {
+                        paymentDate: 'desc'
+                    },
+                    take: 5
+                }
+            }
+        });
+
+        if (!student) {
+            return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+        }
+
+        return NextResponse.json(student);
+    } catch (error) {
+        console.error('Error fetching student:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch student details' },
+            { status: 500 }
+        );
+    }
+}
+
 // DELETE - Hard delete student
 export async function DELETE(
     request: NextRequest,
