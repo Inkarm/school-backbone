@@ -118,35 +118,53 @@ export default function EditEventModal({ isOpen, onClose, onSuccess, event, read
 
     if (!event) return null;
 
-    className = "w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-    required
-    disabled = { readOnly }
-        />
-                        </div >
-        <div className="grid grid-cols-2 gap-2">
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Od</label>
-                <input
-                    type="time"
-                    value={formData.startTime}
-                    onChange={e => setFormData({ ...formData, startTime: e.target.value })}
-                    className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    required
-                    disabled={readOnly}
-                />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Do</label>
-                <input
-                    type="time"
-                    value={formData.endTime}
-                    onChange={e => setFormData({ ...formData, endTime: e.target.value })}
-                    className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    required
-                    disabled={readOnly}
-                />
-            </div>
-        </div>
+    const isSubstitution = event.group?.defaultTrainerId && parseInt(formData.trainerId) !== event.group.defaultTrainerId;
+
+    return (
+        <>
+            <Modal isOpen={isOpen} onClose={onClose} title={readOnly ? `Szczegóły Zajęć: ${event.group?.name || ''}` : `Edycja Zajęć: ${event.group?.name || ''}`}>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {error && (
+                        <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                            {error}
+                        </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Data</label>
+                            <input
+                                type="date"
+                                value={formData.date}
+                                onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                required
+                                disabled={readOnly}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Od</label>
+                                <input
+                                    type="time"
+                                    value={formData.startTime}
+                                    onChange={e => setFormData({ ...formData, startTime: e.target.value })}
+                                    className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    required
+                                    disabled={readOnly}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Do</label>
+                                <input
+                                    type="time"
+                                    value={formData.endTime}
+                                    onChange={e => setFormData({ ...formData, endTime: e.target.value })}
+                                    className="w-full p-2 border border-gray-200 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    required
+                                    disabled={readOnly}
+                                />
+                            </div>
+                        </div>
                     </div >
 
                     <div className="grid grid-cols-2 gap-4">
@@ -231,15 +249,15 @@ export default function EditEventModal({ isOpen, onClose, onSuccess, event, read
                 </form >
             </Modal >
 
-        <ConfirmModal
-            isOpen={showDeleteConfirm}
-            onClose={() => setShowDeleteConfirm(false)}
-            onConfirm={handleDelete}
-            title="Usuń zajęcia"
-            message="Czy na pewno chcesz usunąć te zajęcia? Tej operacji nie można cofnąć."
-            variant="danger"
-            confirmText="Usuń"
-        />
+            <ConfirmModal
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleDelete}
+                title="Usuń zajęcia"
+                message="Czy na pewno chcesz usunąć te zajęcia? Tej operacji nie można cofnąć."
+                variant="danger"
+                confirmText="Usuń"
+            />
         </>
     );
 }
