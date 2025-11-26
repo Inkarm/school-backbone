@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import AddTrainerModal from '@/components/AddTrainerModal';
 import EditTrainerModal from '@/components/EditTrainerModal';
+import PageHeader from '@/components/ui/PageHeader';
 import { User } from '@/types';
 
 export default function TrainersPage() {
@@ -39,15 +40,15 @@ export default function TrainersPage() {
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900">Instruktorzy</h2>
-                    <p className="text-slate-500">Zarządzanie kadrą trenerską</p>
-                </div>
-                <button onClick={() => setIsAddModalOpen(true)} className="btn-primary">
-                    + Dodaj Trenera
-                </button>
-            </div>
+            <PageHeader
+                title="Instruktorzy"
+                description="Zarządzanie kadrą trenerską"
+                action={
+                    <button onClick={() => setIsAddModalOpen(true)} className="btn-primary">
+                        + Dodaj Trenera
+                    </button>
+                }
+            />
 
             {loading ? (
                 <div className="text-center py-12 text-slate-500">Ładowanie...</div>

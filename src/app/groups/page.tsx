@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AddGroupModal from '@/components/AddGroupModal';
 import EditGroupModal from '@/components/EditGroupModal';
+import PageHeader from '@/components/ui/PageHeader';
 import { Group } from '@/types';
 
 export default function GroupsPage() {
@@ -53,19 +54,18 @@ export default function GroupsPage() {
 
     return (
         <div className="space-y-6">
-            {/* ... (header unchanged) */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0">
-                <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-slate-900">Grupy</h2>
-                    <p className="text-sm md:text-base text-slate-500">Zarządzaj grupami zajęciowymi.</p>
-                </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="btn-primary w-full md:w-auto justify-center"
-                >
-                    + Dodaj Grupę
-                </button>
-            </div>
+            <PageHeader
+                title="Grupy"
+                description="Zarządzaj grupami zajęciowymi."
+                action={
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="btn-primary w-full md:w-auto justify-center"
+                    >
+                        + Dodaj Grupę
+                    </button>
+                }
+            />
 
             {loading ? (
                 <div className="text-center py-12 text-slate-500">Ładowanie...</div>

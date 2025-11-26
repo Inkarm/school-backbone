@@ -22,6 +22,7 @@ export interface Student {
     parentEmail: string | null;
     healthNotes: string | null;
     notes: string | null;
+    status: string; // 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED'
     groups?: Group[];
     payments?: Payment[];
     attendance?: Attendance[];

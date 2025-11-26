@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 interface Student {
     id: number;
@@ -144,7 +145,10 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
                             <div key={student.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-3">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <h3 className="font-bold text-slate-900">{student.firstName} {student.lastName}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-bold text-slate-900">{student.firstName} {student.lastName}</h3>
+                                            <StatusBadge status={student.status} />
+                                        </div>
                                         <p className="text-sm text-slate-500">{student.parentName}</p>
                                     </div>
                                     <div className="flex gap-2">
@@ -191,7 +195,10 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
                                 {filteredStudents.map(student => (
                                     <tr key={student.id} className="hover:bg-slate-50 transition-colors group">
                                         <td className="px-4 py-3 font-medium text-slate-900">
-                                            {student.firstName} {student.lastName}
+                                            <div className="flex items-center gap-2">
+                                                {student.firstName} {student.lastName}
+                                                <StatusBadge status={student.status} />
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3 text-slate-500">{student.parentName}</td>
                                         <td className="px-4 py-3 font-mono text-sm text-slate-500">{student.parentPhone}</td>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import AddRoomModal from '@/components/AddRoomModal';
 import EditRoomModal from '@/components/EditRoomModal';
+import PageHeader from '@/components/ui/PageHeader';
 
 interface Room {
     id: number;
@@ -45,18 +46,18 @@ export default function RoomsPage() {
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900">Sale</h2>
-                    <p className="text-slate-500">Zarządzanie salami zajęciowymi</p>
-                </div>
-                <button
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="btn-primary"
-                >
-                    + Dodaj Salę
-                </button>
-            </div>
+            <PageHeader
+                title="Sale"
+                description="Zarządzanie salami zajęciowymi"
+                action={
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="btn-primary"
+                    >
+                        + Dodaj Salę
+                    </button>
+                }
+            />
 
             {loading ? (
                 <div className="text-center py-12 text-slate-500">Ładowanie...</div>
