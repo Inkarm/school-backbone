@@ -20,7 +20,7 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
     const [loading, setLoading] = useState(true);
     const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
     const [mobileDayIndex, setMobileDayIndex] = useState(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
-    const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'rooms'>('week');
+    const [viewMode, setViewMode] = useState<'week' | 'month' | 'rooms'>('rooms');
     const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
 
     useEffect(() => {
@@ -50,7 +50,7 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                 const endDay = endDate.getDay();
                 const endDiff = endDate.getDate() + (7 - endDay);
                 endDate.setDate(endDiff);
-            } else if (viewMode === 'day' || viewMode === 'rooms') {
+            } else if (viewMode === 'rooms') {
                 startDate = new Date(currentWeek);
                 startDate.setHours(0, 0, 0, 0);
                 endDate = new Date(startDate);
@@ -93,7 +93,7 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
         } else if (viewMode === 'month') {
             newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
         } else {
-            // Day or Rooms view
+            // Rooms view (single day)
             newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
         }
         setCurrentWeek(newDate);
@@ -216,7 +216,7 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                             />
                             <div className="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer transition-colors">
                                 <span className="font-semibold text-slate-900 capitalize hidden md:inline-block">
-                                    {(viewMode === 'day' || viewMode === 'rooms')
+                                    {(viewMode === 'rooms')
                                         ? currentWeek.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })
                                         : `${monthName} ${year}`
                                     }
@@ -241,12 +241,6 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                         className={`px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${viewMode === 'rooms' ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         Widok Sal
-                    </button>
-                    <button
-                        onClick={() => setViewMode('day')}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${viewMode === 'day' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        Dzień
                     </button>
                     <button
                         onClick={() => setViewMode('week')}
@@ -311,7 +305,7 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                         className={`min-h-[100px] p-2 border-b border-r border-gray-200 hover:bg-slate-50 transition-colors cursor-pointer group ${isToday ? 'bg-indigo-50/30' : ''}`}
                                         onClick={() => {
                                             setCurrentWeek(date);
-                                            setViewMode('day');
+                                            setViewMode('rooms'); // Switch to Rooms view instead of Day
                                         }}
                                     >
                                         <div className="flex justify-between items-start mb-1">
@@ -457,8 +451,8 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                         </div>
                     </div>
                 ) : (
-                    // ... Day/Week View ...
-                    <div className={`grid ${viewMode === 'day' ? 'grid-cols-[auto_1fr]' : 'grid-cols-[auto_1fr] md:grid-cols-8'} h-full`}>
+                    // ... Week View ...
+                    <div className="grid grid-cols-[auto_1fr] md:grid-cols-8 h-full">
                         {/* Time Column */}
                         <div className="col-span-1 border-r border-gray-100 bg-slate-50/50 sticky left-0 z-10 w-12 md:w-auto">
                             <div className="h-12 border-b border-gray-100 bg-slate-50/50 sticky top-0 z-20"></div>
@@ -487,33 +481,11 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                 today.getDate() === getMonday(currentWeek).getDate() + dayIndex &&
                                 today.getMonth() === getMonday(currentWeek).getMonth();
 
-                            // Visibility logic
-                            let isVisible = true;
-                            if (viewMode === 'day') {
-                                // In day mode, only show the current selected day
-                                const currentDayIndex = (currentWeek.getDay() + 6) % 7;
-                                isVisible = dayIndex === currentDayIndex;
-                            } else {
-                                // In week mode (mobile), use mobileDayIndex
-                                const isVisibleOnMobile = dayIndex === mobileDayIndex;
-                                // On desktop show all, on mobile show selected
-                                // But we are inside a conditional that handles desktop grid-cols-8 vs day grid-cols-[auto_1fr]
-                                // So we need to be careful with classes
-                            }
-
                             // Simplified visibility for Week Mode
                             const isMobileVisible = dayIndex === mobileDayIndex;
 
-                            // Determine display class based on viewMode and device
-                            let displayClass = '';
-                            if (viewMode === 'day') {
-                                const currentDayIndex = (currentWeek.getDay() + 6) % 7;
-                                if (dayIndex !== currentDayIndex) return null;
-                                displayClass = 'col-span-1';
-                            } else {
-                                // Week mode
-                                displayClass = isMobileVisible ? 'block col-span-1' : 'hidden md:block col-span-1';
-                            }
+                            // Week mode display
+                            const displayClass = isMobileVisible ? 'block col-span-1' : 'hidden md:block col-span-1';
 
                             return (
                                 <div key={day} className={`relative min-w-[140px] md:min-w-0 border-r border-gray-100 last:border-r-0 ${isToday ? 'bg-indigo-50/10' : ''} ${displayClass}`}>
