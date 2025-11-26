@@ -10,8 +10,8 @@ async function main() {
 
     // Create a group and trainer
     const group = await prisma.group.create({ data: { name: 'Test Group Fix' } });
-    const trainer = await prisma.user.findFirst({ where: { role: 'trainer' } }) ||
-        await prisma.user.create({ data: { login: 'fix_trainer', password: 'p', role: 'trainer' } });
+    const trainer = await prisma.user.findFirst({ where: { role: 'TRAINER' } }) ||
+        await prisma.user.create({ data: { login: 'fix_trainer', password: 'p', role: 'TRAINER' } });
 
     // Simulate AddClassModal sending "2025-11-24"
     const dateString = "2025-11-24";

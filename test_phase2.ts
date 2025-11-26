@@ -14,7 +14,7 @@ async function main() {
         data: {
             login: trainerLogin,
             password: 'password123',
-            role: 'trainer',
+            role: 'TRAINER',
             firstName: 'Test',
             lastName: 'Trainer',
             email: 'test@example.com',
@@ -78,7 +78,7 @@ async function main() {
     // Save Attendance
     await prisma.attendance.createMany({
         data: [
-            { eventId: event.id, studentId: student.id, status: 'present' }
+            { eventId: event.id, studentId: student.id, present: true }
         ]
     });
     console.log('✅ Saved attendance for student:', student.id);
@@ -87,7 +87,7 @@ async function main() {
     const attendance = await prisma.attendance.findFirst({
         where: { eventId: event.id, studentId: student.id }
     });
-    console.log('✅ Verified attendance status:', attendance?.status);
+    console.log('✅ Verified attendance status:', attendance?.present);
 
     // Cleanup
     console.log('\nCleaning up...');

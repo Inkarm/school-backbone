@@ -7,8 +7,8 @@ async function main() {
 
     // Setup
     const group = await prisma.group.create({ data: { name: 'Conflict Test Group' } });
-    const trainer = await prisma.user.findFirst({ where: { role: 'trainer' } }) ||
-        await prisma.user.create({ data: { login: 'conflict_trainer', password: 'p', role: 'trainer' } });
+    const trainer = await prisma.user.findFirst({ where: { role: 'TRAINER' } }) ||
+        await prisma.user.create({ data: { login: 'conflict_trainer', password: 'p', role: 'TRAINER' } });
     const room = await prisma.room.create({ data: { name: 'Conflict Room', capacity: 10 } });
 
     const date = new Date("2025-11-25"); // Tuesday
