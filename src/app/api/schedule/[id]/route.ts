@@ -46,8 +46,67 @@ export async function PUT(
 ) {
     try {
         const { id } = await params;
+        const eventId = parseInt(id);
         const body = await request.json();
         const { trainerId, roomId, status, description, date, startTime, endTime } = body;
+
+        // Fetch current event to fill in missing details for conflict check
+        const currentEvent = await prisma.scheduleEvent.findUnique({
+            where: { id: eventId }
+        });
+
+        if (!currentEvent) {
+            return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+        }
+
+        const checkDate = date ? new Date(date) : currentEvent.date;
+        const checkStartTime = startTime || currentEvent.startTime;
+        const checkEndTime = endTime || currentEvent.endTime;
+        const checkTrainerId = trainerId !== undefined ? trainerId : currentEvent.trainerId;
+        const checkRoomId = roomId !== undefined ? roomId : currentEvent.roomId;
+
+        // Conflict Detection
+        if (status !== 'CANCELLED') { // Only check if not cancelling
+            const timeConditions = [
+                { startTime: { lte: checkStartTime }, endTime: { gt: checkStartTime } },
+                { startTime: { lt: checkEndTime }, endTime: { gte: checkEndTime } },
+                { startTime: { gte: checkStartTime }, endTime: { lte: checkEndTime } }
+            ];
+
+            if (checkRoomId) {
+                const roomConflict = await prisma.scheduleEvent.findFirst({
+                    where: {
+                        roomId: checkRoomId,
+                        date: checkDate,
+                        status: { not: 'CANCELLED' },
+                        id: { not: eventId }, // Exclude self
+                        OR: timeConditions
+                    }
+                });
+                if (roomConflict) {
+                    return NextResponse.json(
+                        { error: `Sala jest zajęta w dniu ${checkDate.toLocaleDateString()}!` },
+                        { status: 409 }
+                    );
+                }
+            }
+
+            const trainerConflict = await prisma.scheduleEvent.findFirst({
+                where: {
+                    trainerId: checkTrainerId,
+                    date: checkDate,
+                    status: { not: 'CANCELLED' },
+                    id: { not: eventId }, // Exclude self
+                    OR: timeConditions
+                }
+            });
+            if (trainerConflict) {
+                return NextResponse.json(
+                    { error: `Trener prowadzi inne zajęcia w dniu ${checkDate.toLocaleDateString()}!` },
+                    { status: 409 }
+                );
+            }
+        }
 
         const updateData: any = {};
         if (trainerId) updateData.trainerId = trainerId;
@@ -59,7 +118,7 @@ export async function PUT(
         if (endTime) updateData.endTime = endTime;
 
         const event = await prisma.scheduleEvent.update({
-            where: { id: parseInt(id) },
+            where: { id: eventId },
             data: updateData,
             include: {
                 group: true,

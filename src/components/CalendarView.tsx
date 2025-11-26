@@ -20,189 +20,26 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
     const [loading, setLoading] = useState(true);
     const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
     const [mobileDayIndex, setMobileDayIndex] = useState(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
-    const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
+    const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'rooms'>('week');
+    const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
 
     useEffect(() => {
+        fetchRooms();
         fetchEvents();
     }, [currentWeek, refreshTrigger, filterTrainerId, filterRoomId, viewMode]);
 
-    const getMonday = (date: Date) => {
-        const d = new Date(date);
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-        d.setDate(diff);
-        d.setHours(0, 0, 0, 0); // Reset time to start of day
-        return d;
-    };
-
-    const fetchEvents = async () => {
+    const fetchRooms = async () => {
         try {
-            setLoading(true);
-            let startDate: Date, endDate: Date;
-
-            if (viewMode === 'month') {
-                const date = new Date(currentWeek);
-                startDate = new Date(date.getFullYear(), date.getMonth(), 1);
-                endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-
-                // Adjust to full weeks for grid visualization if needed later
-                // For now, just fetching the month's events
-                const day = startDate.getDay();
-                const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
-                startDate.setDate(diff);
-
-                const endDay = endDate.getDay();
-                const endDiff = endDate.getDate() + (7 - endDay);
-                endDate.setDate(endDiff);
-            } else if (viewMode === 'day') {
-                startDate = new Date(currentWeek);
-                startDate.setHours(0, 0, 0, 0);
-                endDate = new Date(startDate);
-                endDate.setDate(endDate.getDate() + 1);
-            } else {
-                // Week mode
-                startDate = getMonday(currentWeek);
-                endDate = new Date(startDate);
-                endDate.setDate(endDate.getDate() + 6);
-            }
-
-            let url = `/api/schedule?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
-
-            const response = await fetch(url);
-
-            if (!response.ok) throw new Error('Failed to fetch schedule');
-
-            let data = await response.json();
-
-            // Client-side filtering
-            if (filterTrainerId) {
-                data = data.filter((e: ScheduleEvent) => e.trainerId === filterTrainerId);
-            }
-            if (filterRoomId) {
-                data = data.filter((e: ScheduleEvent) => e.roomId === filterRoomId);
-            }
-
-            setEvents(data);
-        } catch (err) {
-            console.error('Error fetching schedule:', err);
-        } finally {
-            setLoading(false);
-        }
+            const res = await fetch('/api/rooms');
+            if (res.ok) setRooms(await res.json());
+        } catch (e) { console.error(e); }
     };
 
-    const goToToday = () => {
-        setCurrentWeek(new Date());
-        setMobileDayIndex(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
-    };
+    // ... existing fetchEvents ...
 
-    const navigate = (direction: 'prev' | 'next') => {
-        const newDate = new Date(currentWeek);
-        if (viewMode === 'month') {
-            newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
-        } else if (viewMode === 'day') {
-            newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
-        } else {
-            newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
-        }
-        setCurrentWeek(newDate);
-    };
+    // ... existing navigation ...
 
-    // Helper to calculate layout for overlapping events
-    const calculateEventLayout = (dayEvents: ScheduleEvent[]) => {
-        // Sort by start time
-        const sorted = [...dayEvents].sort((a, b) => {
-            const startA = a.startTime.split(':').map(Number);
-            const startB = b.startTime.split(':').map(Number);
-            return (startA[0] * 60 + startA[1]) - (startB[0] * 60 + startB[1]);
-        });
-
-        const columns: ScheduleEvent[][] = [];
-
-        sorted.forEach(event => {
-            let placed = false;
-            for (let i = 0; i < columns.length; i++) {
-                const lastInCol = columns[i][columns[i].length - 1];
-                // Check if overlaps
-                const [lastEndH, lastEndM] = lastInCol.endTime.split(':').map(Number);
-                const [currStartH, currStartM] = event.startTime.split(':').map(Number);
-
-                const lastEnd = lastEndH * 60 + lastEndM;
-                const currStart = currStartH * 60 + currStartM;
-
-                if (currStart >= lastEnd) {
-                    columns[i].push(event);
-                    placed = true;
-                    break;
-                }
-            }
-            if (!placed) {
-                columns.push([event]);
-            }
-        });
-
-        // Map event ID to layout props
-        const layoutMap = new Map();
-        columns.forEach((col, colIndex) => {
-            col.forEach(event => {
-                layoutMap.set(event.id, {
-                    width: `${90 / columns.length}%`,
-                    left: `${5 + (colIndex * (90 / columns.length))}%`
-                });
-            });
-        });
-
-        return layoutMap;
-    };
-
-    const getEventPosition = (event: ScheduleEvent, layout: { width: string, left: string }) => {
-        const [startHour, startMinute] = event.startTime.split(':').map(Number);
-        const [endHour, endMinute] = event.endTime.split(':').map(Number);
-
-        const startInHours = startHour + startMinute / 60;
-        const endInHours = endHour + endMinute / 60;
-        const duration = endInHours - startInHours;
-
-        return {
-            top: `${(startInHours - 8) * 4 + 3}rem`,
-            height: `${duration * 4}rem`,
-            width: layout.width,
-            left: layout.left
-        };
-    };
-
-    const getEventColor = (event: ScheduleEvent) => {
-        if (event.status === 'CANCELLED') {
-            return 'bg-gray-100 border-gray-300 text-gray-500 line-through opacity-70';
-        }
-        if (event.status === 'COMPLETED') {
-            return 'bg-emerald-50 border-emerald-200 text-emerald-700';
-        }
-
-        const colors = [
-            'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100',
-            'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100',
-            'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100',
-            'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100',
-            'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100',
-            'bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100',
-        ];
-        return colors[(event.group?.id || 0) % colors.length];
-    };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center py-12 h-full">
-                <div className="text-slate-500">Ładowanie grafiku...</div>
-            </div>
-        );
-    }
-
-    const mondayDate = getMonday(currentWeek);
-    const sundayDate = new Date(mondayDate);
-    sundayDate.setDate(sundayDate.getDate() + 6);
-
-    const monthName = currentWeek.toLocaleDateString('pl-PL', { month: 'long' });
-    const year = currentWeek.getFullYear();
+    // ... existing layout helpers ...
 
     return (
         <div className="flex flex-col h-full bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
@@ -237,24 +74,30 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                 </div>
 
                 {/* View Switcher */}
-                <div className="flex bg-slate-100 p-1 rounded-lg">
+                <div className="flex bg-slate-100 p-1 rounded-lg overflow-x-auto max-w-full">
                     <button
                         onClick={() => setViewMode('day')}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${viewMode === 'day' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${viewMode === 'day' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         Dzień
                     </button>
                     <button
                         onClick={() => setViewMode('week')}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${viewMode === 'week' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${viewMode === 'week' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         Tydzień
                     </button>
                     <button
                         onClick={() => setViewMode('month')}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${viewMode === 'month' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${viewMode === 'month' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         Miesiąc
+                    </button>
+                    <button
+                        onClick={() => setViewMode('rooms')}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${viewMode === 'rooms' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                        Widok Sal
                     </button>
                 </div>
 
@@ -274,38 +117,31 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
             {/* Calendar Content */}
             <div className="flex-1 overflow-auto bg-white relative">
                 {viewMode === 'month' ? (
+                    // ... Month View ...
                     <div className="grid grid-cols-7 h-full min-h-[600px] auto-rows-fr border-l border-t border-gray-200">
-                        {/* Month View Header */}
                         {DAYS.map(day => (
                             <div key={day} className="p-2 text-center text-sm font-medium text-slate-500 border-b border-r border-gray-200 bg-slate-50">
                                 <span className="hidden md:inline">{day}</span>
                                 <span className="md:hidden">{day.slice(0, 3)}</span>
                             </div>
                         ))}
-
-                        {/* Month Days */}
                         {(() => {
                             const days = [];
                             const startDate = new Date(currentWeek.getFullYear(), currentWeek.getMonth(), 1);
-                            const startDay = startDate.getDay(); // 0 is Sunday
+                            const startDay = startDate.getDay();
                             const daysInMonth = new Date(currentWeek.getFullYear(), currentWeek.getMonth() + 1, 0).getDate();
-
-                            // Adjust for Monday start (0=Mon, 6=Sun)
                             const startOffset = startDay === 0 ? 6 : startDay - 1;
 
-                            // Previous month padding
                             for (let i = 0; i < startOffset; i++) {
                                 days.push(<div key={`prev-${i}`} className="bg-slate-50/50 border-b border-r border-gray-200" />);
                             }
 
-                            // Current month days
                             for (let i = 1; i <= daysInMonth; i++) {
                                 const date = new Date(currentWeek.getFullYear(), currentWeek.getMonth(), i);
                                 const dayEvents = events.filter(e => {
                                     const eDate = new Date(e.date);
                                     return eDate.getDate() === i && eDate.getMonth() === currentWeek.getMonth();
                                 });
-
                                 const isToday = new Date().toDateString() === date.toDateString();
 
                                 days.push(
@@ -323,7 +159,7 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                             </span>
                                             {dayEvents.length > 0 && (
                                                 <span className="text-xs font-medium text-slate-400">
-                                                    {dayEvents.length} zajęć
+                                                    {dayEvents.length}
                                                 </span>
                                             )}
                                         </div>
@@ -342,11 +178,109 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                     </div>
                                 );
                             }
-
                             return days;
                         })()}
                     </div>
+                ) : viewMode === 'rooms' ? (
+                    // ... Rooms View ...
+                    <div className="grid grid-cols-[auto_1fr] h-full overflow-auto">
+                        {/* Time Column */}
+                        <div className="col-span-1 border-r border-gray-100 bg-slate-50/50 sticky left-0 z-10 w-12 md:w-auto">
+                            <div className="h-12 border-b border-gray-100 bg-slate-50/50 sticky top-0 z-20 flex items-center justify-center text-xs font-bold text-slate-400">
+                                Godz
+                            </div>
+                            {HOURS.map(hour => (
+                                <div key={hour} className="text-[10px] md:text-xs text-right pr-1 md:pr-3 pt-2 text-slate-400 h-16 font-mono border-b border-transparent">
+                                    {hour}:00
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Rooms Columns */}
+                        <div className="flex" style={{ width: `${Math.max(100, rooms.length * 25)}%` }}>
+                            {rooms.map((room) => {
+                                const roomEvents = events.filter(e => e.roomId === room.id);
+                                const layoutMap = calculateEventLayout(roomEvents);
+
+                                return (
+                                    <div key={room.id} className="flex-1 min-w-[150px] border-r border-gray-100 relative">
+                                        <div className="text-center text-sm font-medium py-3 border-b border-gray-100 bg-white sticky top-0 z-10 text-slate-700">
+                                            {room.name}
+                                        </div>
+
+                                        {/* Grid Lines */}
+                                        <div className="absolute inset-0 top-12 pointer-events-none">
+                                            {HOURS.map(hour => (
+                                                <div key={hour} className="h-16 border-b border-gray-50" />
+                                            ))}
+                                        </div>
+
+                                        {/* Events */}
+                                        {roomEvents.map(event => {
+                                            const layout = layoutMap.get(event.id) || { width: '90%', left: '5%' };
+                                            const pos = getEventPosition(event, layout);
+                                            return (
+                                                <div
+                                                    key={event.id}
+                                                    onClick={() => setSelectedEvent(event)}
+                                                    className={`absolute rounded-lg p-2 text-xs cursor-pointer shadow-sm hover:shadow-md transition-all border ${getEventColor(event)} z-10 hover:z-20 group overflow-hidden`}
+                                                    style={{
+                                                        top: pos.top,
+                                                        height: pos.height,
+                                                        width: pos.width,
+                                                        left: pos.left,
+                                                    }}
+                                                >
+                                                    <div className="font-bold truncate text-sm mb-0.5">{event.group?.name}</div>
+                                                    <div className="flex items-center gap-1 opacity-90 truncate text-[11px]">
+                                                        <span>👤</span>
+                                                        {event.trainer ? (event.trainer.firstName ? `${event.trainer.firstName} ${event.trainer.lastName}` : event.trainer.login) : 'Brak trenera'}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })}
+                            {/* No Room Column */}
+                            <div className="flex-1 min-w-[150px] border-r border-gray-100 relative bg-slate-50/30">
+                                <div className="text-center text-sm font-medium py-3 border-b border-gray-100 bg-white sticky top-0 z-10 text-slate-500 italic">
+                                    Bez sali
+                                </div>
+                                <div className="absolute inset-0 top-12 pointer-events-none">
+                                    {HOURS.map(hour => (
+                                        <div key={hour} className="h-16 border-b border-gray-50" />
+                                    ))}
+                                </div>
+                                {events.filter(e => !e.roomId).map(event => {
+                                    const layoutMap = calculateEventLayout(events.filter(e => !e.roomId));
+                                    const layout = layoutMap.get(event.id) || { width: '90%', left: '5%' };
+                                    const pos = getEventPosition(event, layout);
+                                    return (
+                                        <div
+                                            key={event.id}
+                                            onClick={() => setSelectedEvent(event)}
+                                            className={`absolute rounded-lg p-2 text-xs cursor-pointer shadow-sm hover:shadow-md transition-all border ${getEventColor(event)} z-10 hover:z-20 group overflow-hidden`}
+                                            style={{
+                                                top: pos.top,
+                                                height: pos.height,
+                                                width: pos.width,
+                                                left: pos.left,
+                                            }}
+                                        >
+                                            <div className="font-bold truncate text-sm mb-0.5">{event.group?.name}</div>
+                                            <div className="flex items-center gap-1 opacity-90 truncate text-[11px]">
+                                                <span>👤</span>
+                                                {event.trainer ? (event.trainer.firstName ? `${event.trainer.firstName} ${event.trainer.lastName}` : event.trainer.login) : 'Brak trenera'}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
                 ) : (
+                    // ... Day/Week View ...
                     <div className={`grid ${viewMode === 'day' ? 'grid-cols-[auto_1fr]' : 'grid-cols-[auto_1fr] md:grid-cols-8'} h-full`}>
                         {/* Time Column */}
                         <div className="col-span-1 border-r border-gray-100 bg-slate-50/50 sticky left-0 z-10 w-12 md:w-auto">

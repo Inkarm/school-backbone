@@ -81,20 +81,37 @@ export async function POST(request: NextRequest) {
 
         // Helper to check conflicts
         const checkConflict = async (checkDate: Date) => {
-            if (!parsedRoomId) return false;
-            const conflict = await prisma.scheduleEvent.findFirst({
+            const timeConditions = [
+                { startTime: { lte: startTime }, endTime: { gt: startTime } },
+                { startTime: { lt: endTime }, endTime: { gte: endTime } },
+                { startTime: { gte: startTime }, endTime: { lte: endTime } }
+            ];
+
+            // Check Room Conflict
+            if (parsedRoomId) {
+                const roomConflict = await prisma.scheduleEvent.findFirst({
+                    where: {
+                        roomId: parsedRoomId,
+                        date: checkDate,
+                        status: { not: 'CANCELLED' },
+                        OR: timeConditions
+                    }
+                });
+                if (roomConflict) return `Sala jest zajęta w dniu ${checkDate.toLocaleDateString()}!`;
+            }
+
+            // Check Trainer Conflict
+            const trainerConflict = await prisma.scheduleEvent.findFirst({
                 where: {
-                    roomId: parsedRoomId,
+                    trainerId: parsedTrainerId,
                     date: checkDate,
                     status: { not: 'CANCELLED' },
-                    OR: [
-                        { startTime: { lte: startTime }, endTime: { gt: startTime } },
-                        { startTime: { lt: endTime }, endTime: { gte: endTime } },
-                        { startTime: { gte: startTime }, endTime: { lte: endTime } }
-                    ]
+                    OR: timeConditions
                 }
             });
-            return !!conflict;
+            if (trainerConflict) return `Trener prowadzi inne zajęcia w dniu ${checkDate.toLocaleDateString()}!`;
+
+            return null;
         };
 
         if (isRecurring && recurrenceEndDate) {
@@ -110,9 +127,10 @@ export async function POST(request: NextRequest) {
 
             // Check conflicts for ALL dates
             for (const d of dates) {
-                if (await checkConflict(d)) {
+                const conflictError = await checkConflict(d);
+                if (conflictError) {
                     return NextResponse.json(
-                        { error: `Konflikt sali w dniu ${d.toLocaleDateString()}!` },
+                        { error: conflictError },
                         { status: 409 }
                     );
                 }
@@ -154,9 +172,10 @@ export async function POST(request: NextRequest) {
 
         } else {
             // Single Event
-            if (await checkConflict(parsedDate)) {
+            const conflictError = await checkConflict(parsedDate);
+            if (conflictError) {
                 return NextResponse.json(
-                    { error: 'Sala jest zajęta w tym terminie!' },
+                    { error: conflictError },
                     { status: 409 }
                 );
             }
