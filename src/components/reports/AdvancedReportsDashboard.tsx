@@ -8,6 +8,7 @@ import RoomUtilizationChart from './RoomUtilizationChart';
 import TrainerPerformanceChart from './TrainerPerformanceChart';
 import OverduePaymentsList from './OverduePaymentsList';
 import DataExportButton from './DataExportButton';
+import MonthlyReport from './MonthlyReport';
 
 export default function AdvancedReportsDashboard() {
     const [revenueData, setRevenueData] = useState([]);
@@ -63,6 +64,9 @@ export default function AdvancedReportsDashboard() {
 
     return (
         <div className="space-y-6">
+            {/* Monthly Report Summary */}
+            <MonthlyReport />
+
             {/* Financial Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue Chart */}
