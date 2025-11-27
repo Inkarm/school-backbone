@@ -17,6 +17,7 @@ export default function AdvancedReportsDashboard() {
     const [roomUtilizationData, setRoomUtilizationData] = useState([]);
     const [trainerStatsData, setTrainerStatsData] = useState([]);
     const [overdueData, setOverdueData] = useState([]);
+    const [retentionData, setRetentionData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -27,14 +28,15 @@ export default function AdvancedReportsDashboard() {
                 const start = new Date();
                 start.setDate(start.getDate() - 30);
 
-                const [revenueRes, methodsRes, groupRes, growthRes, roomRes, trainerRes, overdueRes] = await Promise.all([
+                const [revenueRes, methodsRes, groupRes, growthRes, roomRes, trainerRes, overdueRes, retentionRes] = await Promise.all([
                     fetch('/api/reports/financial/revenue'),
                     fetch('/api/reports/financial/payment-methods'),
                     fetch('/api/reports/financial/by-group'),
                     fetch('/api/reports/students/growth'),
                     fetch('/api/reports/operations/room-utilization'),
                     fetch(`/api/reports/trainer-stats?startDate=${start.toISOString()}&endDate=${end.toISOString()}`),
-                    fetch('/api/reports/financial/overdue')
+                    fetch('/api/reports/financial/overdue'),
+                    fetch('/api/reports/students/retention')
                 ]);
 
                 if (revenueRes.ok) setRevenueData(await revenueRes.json());
@@ -44,6 +46,7 @@ export default function AdvancedReportsDashboard() {
                 if (roomRes.ok) setRoomUtilizationData(await roomRes.json());
                 if (trainerRes.ok) setTrainerStatsData(await trainerRes.json());
                 if (overdueRes.ok) setOverdueData(await overdueRes.json());
+                if (retentionRes.ok) setRetentionData(await retentionRes.json());
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
             } finally {
@@ -98,6 +101,33 @@ export default function AdvancedReportsDashboard() {
                 </div>
                 <TrainerPerformanceChart data={trainerStatsData} />
             </div>
+
+            {/* Retention Metrics */}
+            {retentionData && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 className="text-sm font-medium text-slate-500 mb-2">Wskaźnik Retencji</h3>
+                        <div className="flex items-end gap-2">
+                            <span className="text-3xl font-bold text-indigo-600">{retentionData.retentionRate}%</span>
+                            <span className="text-sm text-slate-400 mb-1">utrzymanych</span>
+                        </div>
+                    </div>
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 className="text-sm font-medium text-slate-500 mb-2">Wskaźnik Odejść (Churn)</h3>
+                        <div className="flex items-end gap-2">
+                            <span className="text-3xl font-bold text-red-500">{retentionData.churnRate}%</span>
+                            <span className="text-sm text-slate-400 mb-1">odeszło</span>
+                        </div>
+                    </div>
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 className="text-sm font-medium text-slate-500 mb-2">Nowi Uczniowie (30 dni)</h3>
+                        <div className="flex items-end gap-2">
+                            <span className="text-3xl font-bold text-green-600">+{retentionData.newStudents}</span>
+                            <span className="text-sm text-slate-400 mb-1">dołączyło</span>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Operational & Growth */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
