@@ -6,6 +6,7 @@ interface Student {
     id: number;
     firstName: string;
     lastName: string;
+    status: string;
 }
 
 interface AttendanceRecord {
@@ -40,7 +41,10 @@ export default function AttendanceMarker({ eventId, groupId, onSave }: Attendanc
             const groupRes = await fetch(`/api/groups/${groupId}`);
             if (!groupRes.ok) throw new Error('Failed to fetch group');
             const groupData = await groupRes.json();
-            setStudents(groupData.students || []);
+
+            // Filter only ACTIVE students for attendance
+            const activeStudents = (groupData.students || []).filter((s: Student) => s.status === 'ACTIVE');
+            setStudents(activeStudents);
 
             // Fetch existing attendance
             const attendanceRes = await fetch(`/api/attendance?eventId=${eventId}`);
@@ -55,7 +59,7 @@ export default function AttendanceMarker({ eventId, groupId, onSave }: Attendanc
                 });
 
                 // Default all students to absent if no record exists
-                groupData.students.forEach((student: Student) => {
+                activeStudents.forEach((student: Student) => {
                     if (!(student.id in attendanceMap)) {
                         attendanceMap[student.id] = false;
                     }
@@ -65,7 +69,7 @@ export default function AttendanceMarker({ eventId, groupId, onSave }: Attendanc
             } else {
                 // Initialize all as absent
                 const attendanceMap: Record<number, boolean> = {};
-                groupData.students.forEach((student: Student) => {
+                activeStudents.forEach((student: Student) => {
                     attendanceMap[student.id] = false;
                 });
                 setAttendance(attendanceMap);
@@ -146,7 +150,7 @@ export default function AttendanceMarker({ eventId, groupId, onSave }: Attendanc
         return (
             <div className="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
                 <span className="text-4xl block mb-2">👥</span>
-                <p className="text-slate-600 font-medium">Brak uczniów w tej grupie</p>
+                <p className="text-slate-600 font-medium">Brak aktywnych uczniów w tej grupie</p>
             </div>
         );
     }
