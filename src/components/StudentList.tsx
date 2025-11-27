@@ -169,7 +169,7 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
                                         <p className="text-sm text-slate-500">{student.parentName}</p>
                                     </div>
                                     <div className="flex gap-2">
-                                        <Link href={`/students/${student.id}/profile`} className="p-2 text-slate-400 hover:text-indigo-600">
+                                        <Link href={`/students/${student.id}`} className="p-2 text-slate-400 hover:text-indigo-600">
                                             👤
                                         </Link>
                                     </div>
@@ -241,7 +241,7 @@ export default function StudentList({ refreshTrigger = 0 }: StudentListProps) {
                                                     🗑
                                                 </button>
                                                 <Link
-                                                    href={`/students/${student.id}/profile`}
+                                                    href={`/students/${student.id}`}
                                                     className="text-sm text-indigo-600 hover:text-indigo-800 px-2 font-medium"
                                                 >
                                                     Szczegóły
