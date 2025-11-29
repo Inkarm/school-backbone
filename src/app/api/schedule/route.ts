@@ -26,6 +26,16 @@ export async function GET(request: NextRequest) {
             whereClause.groupId = parseInt(groupId);
         }
 
+        const trainerId = searchParams.get('trainerId');
+        if (trainerId) {
+            whereClause.trainerId = parseInt(trainerId);
+        }
+
+        const roomId = searchParams.get('roomId');
+        if (roomId) {
+            whereClause.roomId = parseInt(roomId);
+        }
+
         if (startDate && endDate) {
             whereClause.date = {
                 gte: new Date(startDate),

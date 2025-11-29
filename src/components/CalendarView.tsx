@@ -162,8 +162,21 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
         };
     };
 
+    const getEventStyle = (event: ScheduleEvent) => {
+        if (event.status === 'CANCELLED') return {};
+        if (event.trainer?.color) {
+            return {
+                backgroundColor: `${event.trainer.color}33`, // ~20% opacity
+                borderColor: event.trainer.color,
+                color: '#1e293b' // slate-800 for readability
+            };
+        }
+        return {};
+    };
+
     const getEventColor = (event: ScheduleEvent) => {
         if (event.status === 'CANCELLED') return 'bg-red-100 border-red-200 text-red-800 opacity-75';
+        if (event.trainer?.color) return 'border'; // Base border class
 
         // Color based on group type or other logic could go here
         // For now, random-ish stable colors based on group ID
@@ -320,7 +333,11 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                         </div>
                                         <div className="space-y-1">
                                             {dayEvents.slice(0, 3).map(event => (
-                                                <div key={event.id} className="text-[10px] truncate px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                                <div
+                                                    key={event.id}
+                                                    className={`text-[10px] truncate px-1.5 py-0.5 rounded border ${getEventColor(event)}`}
+                                                    style={getEventStyle(event)}
+                                                >
                                                     {event.startTime} {event.group?.name}
                                                 </div>
                                             ))}
@@ -390,6 +407,7 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                                         height: pos.height,
                                                         width: pos.width,
                                                         left: pos.left,
+                                                        ...getEventStyle(event)
                                                     }}
                                                 >
                                                     <div className="font-bold truncate text-sm mb-0.5">{event.group?.name}</div>
@@ -436,6 +454,7 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                                     height: pos.height,
                                                     width: pos.width,
                                                     left: pos.left,
+                                                    ...getEventStyle(event)
                                                 }}
                                             >
                                                 <div className="font-bold truncate text-sm mb-0.5">{event.group?.name}</div>
@@ -516,6 +535,7 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                                     height: pos.height,
                                                     width: pos.width,
                                                     left: pos.left,
+                                                    ...getEventStyle(event)
                                                 }}
                                             >
                                                 <div className="font-bold truncate text-sm mb-0.5">{event.group?.name || 'Brak grupy'}</div>
