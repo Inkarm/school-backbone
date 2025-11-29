@@ -37,6 +37,8 @@ model User {
   scheduleEvents   ScheduleEvent[] @relation("EventTrainer")
   recurringSchedules RecurringSchedule[] @relation("RecurringTrainer")
   accessibleGroups Group[]         @relation("TrainerAccessibleGroups")
+  announcements    Announcement[]
+  announcementReads AnnouncementRead[]
 }
 
 model Student {
@@ -173,4 +175,30 @@ model Payment {
 
   // Relations
   student Student @relation(fields: [studentId], references: [id])
+}
+
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String   @db.Text
+  priority  String   @default("INFO") // INFO, WARNING, URGENT
+  isPinned  Boolean  @default(false)
+  authorId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author    User     @relation(fields: [authorId], references: [id])
+  reads     AnnouncementRead[]
+}
+
+model AnnouncementRead {
+  id             Int          @id @default(autoincrement())
+  announcementId Int
+  userId         Int
+  readAt         DateTime     @default(now())
+
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId])
 }

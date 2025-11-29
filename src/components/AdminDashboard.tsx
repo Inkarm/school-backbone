@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import AddStudentModal from '@/components/AddStudentModal';
 import AddPaymentModal from '@/components/AddPaymentModal';
+import NoticeBoardWidget from '@/components/notices/NoticeBoardWidget';
 
 interface DashboardStats {
     todayClasses: number;
@@ -98,21 +99,27 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            <div className="clean-card p-8">
-                <h3 className="text-xl font-bold mb-6 tracking-tight text-slate-900">Szybkie akcje</h3>
-                <div className="flex gap-4">
-                    <button
-                        onClick={() => setIsStudentModalOpen(true)}
-                        className="btn-primary flex items-center gap-2"
-                    >
-                        <span>+</span> Dodaj Ucznia
-                    </button>
-                    <button
-                        onClick={() => setIsPaymentModalOpen(true)}
-                        className="btn-secondary"
-                    >
-                        Nowa Wpłata
-                    </button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 clean-card p-8">
+                    <h3 className="text-xl font-bold mb-6 tracking-tight text-slate-900">Szybkie akcje</h3>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => setIsStudentModalOpen(true)}
+                            className="btn-primary flex items-center gap-2"
+                        >
+                            <span>+</span> Dodaj Ucznia
+                        </button>
+                        <button
+                            onClick={() => setIsPaymentModalOpen(true)}
+                            className="btn-secondary"
+                        >
+                            Nowa Wpłata
+                        </button>
+                    </div>
+                </div>
+
+                <div className="lg:col-span-1 h-full">
+                    <NoticeBoardWidget />
                 </div>
             </div>
 

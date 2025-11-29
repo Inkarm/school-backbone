@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { User, ScheduleEvent, Group } from '@/types';
 import Link from 'next/link';
+import NoticeBoardWidget from '@/components/notices/NoticeBoardWidget';
 
 interface TrainerDashboardProps {
     user: User;
@@ -61,7 +62,11 @@ export default function TrainerDashboard({ user }: TrainerDashboardProps) {
                 <p className="text-slate-500">Twoje centrum dowodzenia.</p>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Notice Board */}
+                <div className="md:col-span-1 h-full">
+                    <NoticeBoardWidget />
+                </div>
                 {/* Today's Schedule */}
                 <div className="clean-card p-6">
                     <div className="flex justify-between items-center mb-4">
