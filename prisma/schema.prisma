@@ -39,6 +39,8 @@ model User {
   accessibleGroups Group[]         @relation("TrainerAccessibleGroups")
   announcements    Announcement[]
   announcementReads AnnouncementRead[]
+  announcementComments AnnouncementComment[]
+  announcementReactions AnnouncementReaction[]
 }
 
 model Student {
@@ -189,6 +191,8 @@ model Announcement {
 
   author    User     @relation(fields: [authorId], references: [id])
   reads     AnnouncementRead[]
+  comments  AnnouncementComment[]
+  reactions AnnouncementReaction[]
 }
 
 model AnnouncementRead {
@@ -201,4 +205,29 @@ model AnnouncementRead {
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([announcementId, userId])
+}
+
+model AnnouncementComment {
+  id             Int          @id @default(autoincrement())
+  content        String
+  announcementId Int
+  authorId       Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  author         User         @relation(fields: [authorId], references: [id])
+}
+
+model AnnouncementReaction {
+  id             Int          @id @default(autoincrement())
+  emoji          String       // e.g. "👍", "❤️"
+  announcementId Int
+  userId         Int
+  createdAt      DateTime     @default(now())
+
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId, emoji])
 }
