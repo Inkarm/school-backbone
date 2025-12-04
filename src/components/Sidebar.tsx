@@ -19,6 +19,7 @@ const Sidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCollaps
 
     const navItems = [
         { label: 'Pulpit', href: '/', icon: '⊞', roles: ['ADMIN', 'TRAINER'] },
+        { label: 'Agenda', href: '/schedule/agenda', icon: '📋', roles: ['ADMIN', 'TRAINER'] },
         { label: 'Uczniowie', href: '/students', icon: '👥', roles: ['ADMIN'] },
         { label: 'Grupy', href: '/groups', icon: '👥', roles: ['ADMIN'] },
         { label: 'Sale', href: '/rooms', icon: '🏢', roles: ['ADMIN'] },
@@ -27,6 +28,7 @@ const Sidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCollaps
         { label: 'Obecność', href: '/attendance', icon: '✅', roles: ['ADMIN', 'TRAINER'] },
         { label: 'Płatności', href: '/finances', icon: '💳', roles: ['ADMIN'] },
         { label: 'Raporty', href: '/reports', icon: '📄', roles: ['ADMIN'] },
+        { label: 'Ogłoszenia', href: '/notices', icon: '📢', roles: ['ADMIN', 'TRAINER'] },
     ];
 
     // Filter navigation based on user role

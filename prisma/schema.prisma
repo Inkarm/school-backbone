@@ -35,6 +35,7 @@ model User {
   // Relations
   groups           Group[]         @relation("GroupDefaultTrainer")
   scheduleEvents   ScheduleEvent[] @relation("EventTrainer")
+  originalTrainerEvents ScheduleEvent[] @relation("OriginalTrainer")
   recurringSchedules RecurringSchedule[] @relation("RecurringTrainer")
   accessibleGroups Group[]         @relation("TrainerAccessibleGroups")
   announcements    Announcement[]
@@ -105,17 +106,23 @@ model ScheduleEvent {
   groupId   Int
   trainerId Int
   
-  // New fields
+  // Substitution tracking
+  originalTrainerId Int?
+  isSubstitution    Boolean  @default(false)
+  substitutedAt     DateTime?
+  
+  // Other fields
   status      String   @default("SCHEDULED") // 'SCHEDULED', 'CANCELLED', 'COMPLETED'
   description String?
   seriesId    Int?
 
   // Relations
-  group      Group        @relation(fields: [groupId], references: [id])
-  trainer    User         @relation("EventTrainer", fields: [trainerId], references: [id])
-  room       Room?        @relation(fields: [roomId], references: [id])
-  series     RecurringSchedule? @relation(fields: [seriesId], references: [id])
-  attendance Attendance[]
+  group           Group              @relation(fields: [groupId], references: [id])
+  trainer         User               @relation("EventTrainer", fields: [trainerId], references: [id])
+  originalTrainer User?              @relation("OriginalTrainer", fields: [originalTrainerId], references: [id])
+  room            Room?              @relation(fields: [roomId], references: [id])
+  series          RecurringSchedule? @relation(fields: [seriesId], references: [id])
+  attendance      Attendance[]
 }
 
 model RecurringSchedule {

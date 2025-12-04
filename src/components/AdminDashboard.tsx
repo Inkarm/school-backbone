@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AddStudentModal from '@/components/AddStudentModal';
 import AddPaymentModal from '@/components/AddPaymentModal';
 import NoticeBoardWidget from '@/components/notices/NoticeBoardWidget';
+import SubstituteModal from '@/components/SubstituteModal';
 
 interface DashboardStats {
     todayClasses: number;
@@ -16,6 +17,7 @@ interface DashboardStats {
 export default function AdminDashboard() {
     const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [isSubstituteModalOpen, setIsSubstituteModalOpen] = useState(false);
     const [stats, setStats] = useState<DashboardStats>({
         todayClasses: 0,
         totalStudents: 0,
@@ -115,6 +117,12 @@ export default function AdminDashboard() {
                         >
                             Nowa Wpłata
                         </button>
+                        <button
+                            onClick={() => setIsSubstituteModalOpen(true)}
+                            className="btn-secondary flex items-center gap-2"
+                        >
+                            🔄 Zastępstwo
+                        </button>
                     </div>
                 </div>
 
@@ -132,6 +140,12 @@ export default function AdminDashboard() {
             <AddPaymentModal
                 isOpen={isPaymentModalOpen}
                 onClose={() => setIsPaymentModalOpen(false)}
+            />
+
+            <SubstituteModal
+                isOpen={isSubstituteModalOpen}
+                onClose={() => setIsSubstituteModalOpen(false)}
+                onSuccess={() => { }}
             />
         </div>
     );

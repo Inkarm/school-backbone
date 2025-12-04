@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AdvancedReportsDashboard from '@/components/reports/AdvancedReportsDashboard';
+import SubstitutionsReport from '@/components/reports/SubstitutionsReport';
 
 interface TrainerStats {
     trainerId: number;
@@ -13,7 +14,7 @@ interface TrainerStats {
 }
 
 export default function ReportsPage() {
-    const [activeTab, setActiveTab] = useState<'trainer' | 'advanced'>('trainer');
+    const [activeTab, setActiveTab] = useState<'trainer' | 'substitutions' | 'advanced'>('trainer');
     const [stats, setStats] = useState<TrainerStats[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -94,6 +95,17 @@ export default function ReportsPage() {
                     >
                         Zaawansowana Analityka
                         <span className="ml-2 bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-xs">Nowość</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('substitutions')}
+                        className={`
+                            whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                            ${activeTab === 'substitutions'
+                                ? 'border-indigo-500 text-indigo-600'
+                                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}
+                        `}
+                    >
+                        Zastępstwa
                     </button>
                 </nav>
             </div>
@@ -191,6 +203,11 @@ export default function ReportsPage() {
                             </div>
                         </div>
                     </div>
+                </div>
+            ) : activeTab === 'substitutions' ? (
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h3 className="text-xl font-bold text-slate-900 mb-6">Raport Zastępstw</h3>
+                    <SubstitutionsReport />
                 </div>
             ) : (
                 <AdvancedReportsDashboard />
