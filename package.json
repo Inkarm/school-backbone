@@ -10,6 +10,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
     "@prisma/client": "^6.0.0",
     "@serwist/next": "^9.2.3",
     "@serwist/precaching": "^9.2.3",
