@@ -238,3 +238,11 @@ model AnnouncementReaction {
 
   @@unique([announcementId, userId, emoji])
 }
+
+model Backup {
+  id        Int      @id @default(autoincrement())
+  name      String
+  data      Bytes    // Compressed JSON data
+  createdAt DateTime @default(now())
+  size      Int      // Original size in bytes
+}

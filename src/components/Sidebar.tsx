@@ -29,6 +29,7 @@ const Sidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCollaps
         { label: 'Płatności', href: '/finances', icon: '💳', roles: ['ADMIN'] },
         { label: 'Raporty', href: '/reports', icon: '📄', roles: ['ADMIN'] },
         { label: 'Ogłoszenia', href: '/notices', icon: '📢', roles: ['ADMIN', 'TRAINER'] },
+        { label: 'System', href: '/system/backups', icon: '⚙️', roles: ['ADMIN'] },
     ];
 
     // Filter navigation based on user role
