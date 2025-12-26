@@ -43,13 +43,16 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
 
             if (viewMode === 'week') {
                 const day = startDate.getDay();
-                const diff = startDate.getDate() - day + (day === 0 ? -6 : 1);
+                const diff = startDate.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
                 startDate.setDate(diff);
                 startDate.setHours(0, 0, 0, 0);
 
                 const endDay = endDate.getDay();
-                const endDiff = endDate.getDate() + (7 - endDay);
-                endDate.setDate(endDiff);
+                const endDiff = endDate.getDate() + (7 - endDay) + (endDay === 0 ? -7 : 0); // Adjust to Sunday? No, logic was flawed.
+                // Simpler: Just set endDate to startDate + 7 days
+                endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 7); // Next Monday 00:00
+                endDate.setHours(0, 0, 0, 0);
             } else if (viewMode === 'rooms') {
                 startDate = new Date(currentWeek);
                 startDate.setHours(0, 0, 0, 0);

@@ -117,8 +117,8 @@ model ScheduleEvent {
   seriesId    Int?
 
   // Relations
-  group           Group              @relation(fields: [groupId], references: [id])
-  trainer         User               @relation("EventTrainer", fields: [trainerId], references: [id])
+  group           Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  trainer         User               @relation("EventTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
   originalTrainer User?              @relation("OriginalTrainer", fields: [originalTrainerId], references: [id])
   room            Room?              @relation(fields: [roomId], references: [id])
   series          RecurringSchedule? @relation(fields: [seriesId], references: [id])
@@ -143,8 +143,8 @@ model RecurringSchedule {
   updatedAt DateTime @updatedAt
 
   // Relations
-  group   Group   @relation(fields: [groupId], references: [id])
-  trainer User    @relation("RecurringTrainer", fields: [trainerId], references: [id])
+  group   Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  trainer User    @relation("RecurringTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
   room    Room?   @relation(fields: [roomId], references: [id])
   events  ScheduleEvent[]
 }

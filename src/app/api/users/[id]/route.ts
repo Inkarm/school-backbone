@@ -112,8 +112,21 @@ export const DELETE = authorizedRoute(async (req, { params, session }) => {
         return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
     }
 
-    await prisma.user.delete({
-        where: { id: userId },
+    // Transactional cleanup
+    await prisma.$transaction(async (tx) => {
+        // 1. Unlink from Groups (set defaultTrainer to null)
+        await tx.group.updateMany({
+            where: { defaultTrainerId: userId },
+            data: { defaultTrainerId: null }
+        });
+
+        // 2. Events are handled by Cascade (Schema) or we can delete manually to be sure
+        // await tx.scheduleEvent.deleteMany({ where: { trainerId: userId } }); // Schema handles this now
+
+        // 3. Delete user
+        await tx.user.delete({
+            where: { id: userId },
+        });
     });
 
     return NextResponse.json({ message: 'User deleted successfully' });
