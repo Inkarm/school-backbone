@@ -462,7 +462,7 @@ export default function CalendarView({ refreshTrigger = 0, filterTrainerId, filt
                                                 onClick={() => setSelectedEvent(event)}
                                                 className={`absolute rounded-lg p-2 text-xs cursor-pointer shadow-sm hover:shadow-md transition-all border ${getEventColor(event)} z-10 hover:z-20 group overflow-hidden`}
                                                 style={{
-                                                    top: pos.top, top: pos.top,
+                                                    top: pos.top,
                                                     height: pos.height,
                                                     width: pos.width,
                                                     left: pos.left,
