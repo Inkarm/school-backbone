@@ -54,8 +54,23 @@ export const DELETE = authorizedRoute(async (req, { params }) => {
         return NextResponse.json({ error: 'Group not found' }, { status: 404 });
     }
 
-    await prisma.group.delete({
-        where: { id: groupId },
+    // Transactional delete: Manually delete related events/schedules to ensure success
+    // irrespective of Schema Cascade settings (Safety Net).
+    await prisma.$transaction(async (tx) => {
+        // Delete Future Events
+        await tx.scheduleEvent.deleteMany({
+            where: { groupId: groupId }
+        });
+
+        // Delete Recurring Series
+        await tx.recurringSchedule.deleteMany({
+            where: { groupId: groupId }
+        });
+
+        // Finally delete group
+        await tx.group.delete({
+            where: { id: groupId },
+        });
     });
 
     return NextResponse.json({ message: 'Group deleted successfully' });
