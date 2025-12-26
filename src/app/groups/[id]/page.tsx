@@ -56,11 +56,32 @@ export default function GroupDetailsPage({ params }: { params: Promise<{ id: str
                 ) : (
                     <ul className="space-y-2">
                         {group.students.map((student) => (
-                            <li key={student.id} className="p-3 bg-slate-50 rounded-lg border border-gray-200 text-slate-700 flex justify-between items-center">
+                            <li key={student.id} className="p-3 bg-slate-50 rounded-lg border border-gray-200 text-slate-700 flex justify-between items-center group">
                                 <span>{student.firstName} {student.lastName}</span>
-                                <Link href={`/students/${student.id}`} className="text-sm text-blue-600 hover:underline">
-                                    Zobacz profil
-                                </Link>
+                                <div className="flex items-center gap-3">
+                                    <Link href={`/students/${student.id}`} className="text-sm text-blue-600 hover:underline">
+                                        Zobacz profil
+                                    </Link>
+                                    <button
+                                        onClick={async () => {
+                                            if (!confirm('Czy na pewno chcesz usunąć tego ucznia z grupy?')) return;
+                                            try {
+                                                const res = await fetch(`/api/groups/${group.id}/students?studentId=${student.id}`, {
+                                                    method: 'DELETE'
+                                                });
+                                                if (res.ok) fetchGroup();
+                                                else alert('Nie udało się usunąć ucznia');
+                                            } catch (e) {
+                                                console.error(e);
+                                                alert('Wystąpił błąd');
+                                            }
+                                        }}
+                                        className="text-slate-400 hover:text-red-600 transition-colors p-1"
+                                        title="Usuń z grupy"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
                             </li>
                         ))}
                     </ul>
