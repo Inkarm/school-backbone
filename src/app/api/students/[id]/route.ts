@@ -37,15 +37,19 @@ export const GET = authorizedRoute(async (req, { params }) => {
     return NextResponse.json(student);
 });
 
-// Transactional delete to handle constraints manually (safer than global cascade for financials)
-await prisma.$transaction([
-    prisma.attendance.deleteMany({ where: { studentId } }),
-    prisma.payment.deleteMany({ where: { studentId } }),
-    prisma.invoice.deleteMany({ where: { studentId } }),
-    prisma.student.delete({ where: { id: studentId } }),
-]);
+export const DELETE = authorizedRoute(async (req, { params }) => {
+    const { id } = await params;
+    const studentId = parseInt(id);
 
-return NextResponse.json({ message: 'Student deleted successfully' });
+    // Transactional delete to handle constraints manually (safer than global cascade for financials)
+    await prisma.$transaction([
+        prisma.attendance.deleteMany({ where: { studentId } }),
+        prisma.payment.deleteMany({ where: { studentId } }),
+        prisma.invoice.deleteMany({ where: { studentId } }),
+        prisma.student.delete({ where: { id: studentId } }),
+    ]);
+
+    return NextResponse.json({ message: 'Student deleted successfully' });
 }, { roles: ['ADMIN'] });
 
 export const PUT = authorizedRoute(async (req, { params }) => {
